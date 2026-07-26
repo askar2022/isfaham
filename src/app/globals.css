@@ -1588,6 +1588,11 @@ footer a:hover {
   width: 40px;
 }
 
+.auth-brand > img {
+  border-radius: 12px;
+  box-shadow: 0 5px 14px rgba(67, 55, 212, 0.2);
+}
+
 .teacher-login-form {
   background: white;
   border: 1px solid var(--line);

@@ -1,7 +1,8 @@
-import { Languages } from "lucide-react";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
+import appIcon from "@/app/app_icon.png";
 import { TeacherLoginForm } from "@/components/TeacherLoginForm";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -29,9 +30,7 @@ export default async function TeacherLoginPage() {
   return (
     <main className="auth-page">
       <Link className="auth-brand" href="/">
-        <span>
-          <Languages size={22} />
-        </span>
+        <Image alt="" height={42} priority src={appIcon} width={42} />
         <strong>Isfaham</strong>
       </Link>
       <TeacherLoginForm />
