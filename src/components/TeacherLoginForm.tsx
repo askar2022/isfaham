@@ -126,7 +126,7 @@ export function TeacherLoginForm() {
       <div className="auth-icon">
         <ShieldCheck size={25} />
       </div>
-      <h1>Teacher sign in</h1>
+      <h1>Staff sign in</h1>
       <p>
         No password needed. We’ll email a secure six-digit code to your approved
         school address.

@@ -4,7 +4,7 @@ import { TeacherDashboard } from "@/components/TeacherDashboard";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Teacher workspace",
+  title: "Staff workspace",
 };
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export default async function TeacherPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("school_id, full_name, email")
+    .select("school_id, full_name, email, is_admin")
     .eq("id", user.id)
     .single();
 
@@ -100,6 +100,7 @@ export default async function TeacherPage() {
       conversations={conversations}
       schoolName={school?.name ?? "Your school"}
       teacherName={profile.full_name || profile.email || "Teacher"}
+      isAdmin={Boolean(profile.is_admin)}
       usage={{
         conversations: usage.conversations,
         averageSessionMinutes: usage.completedSessions

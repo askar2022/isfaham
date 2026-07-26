@@ -1803,10 +1803,29 @@ footer a:hover {
   margin: 0;
 }
 
-.teacher-welcome > button {
+.teacher-welcome-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.teacher-welcome-actions > button {
   border: 0;
   cursor: pointer;
-  flex: 0 0 auto;
+}
+
+.admin-link-button {
+  align-items: center;
+  background: white;
+  border: 1px solid #ddd7e8;
+  border-radius: 12px;
+  color: var(--purple);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 7px;
+  padding: 15px 17px;
 }
 
 .usage-section {
@@ -2541,7 +2560,15 @@ footer a:hover {
     font-size: 39px;
   }
 
-  .teacher-welcome > button {
+  .teacher-welcome-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .teacher-welcome-actions > button,
+  .admin-link-button {
+    justify-content: center;
     width: 100%;
   }
 
@@ -2573,5 +2600,440 @@ footer a:hover {
 
   .room-message {
     max-width: 93%;
+  }
+}
+
+/* School administrator portal */
+.admin-page {
+  background: #f8f7fb;
+  min-height: 100vh;
+}
+
+.admin-header {
+  align-items: center;
+  background: white;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  min-height: 66px;
+  padding: 10px max(22px, calc((100vw - 1080px) / 2));
+}
+
+.admin-header a,
+.admin-header > span {
+  align-items: center;
+  display: flex;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 7px;
+}
+
+.admin-header a {
+  color: var(--purple);
+}
+
+.admin-header > span {
+  background: var(--purple-soft);
+  border-radius: 18px;
+  color: var(--purple);
+  padding: 7px 10px;
+}
+
+.admin-main {
+  margin: 0 auto;
+  max-width: 1080px;
+  padding: 55px 22px 90px;
+}
+
+.admin-title {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.admin-title h1 {
+  font-size: clamp(38px, 5vw, 53px);
+  letter-spacing: -2.5px;
+  margin: 12px 0 8px;
+}
+
+.admin-title p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.admin-school-card {
+  align-items: center;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  gap: 11px;
+  min-width: 230px;
+  padding: 13px;
+}
+
+.admin-school-card > span {
+  align-items: center;
+  background: var(--purple-soft);
+  border-radius: 10px;
+  color: var(--purple);
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.admin-school-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-school-card strong {
+  font-size: 12px;
+}
+
+.admin-school-card small {
+  color: #88818f;
+  font-size: 9px;
+}
+
+.add-teacher-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  margin-top: 35px;
+  padding: 25px;
+}
+
+.add-teacher-heading {
+  align-items: center;
+  display: flex;
+  gap: 11px;
+}
+
+.add-teacher-heading > span {
+  align-items: center;
+  background: var(--purple-soft);
+  border-radius: 10px;
+  color: var(--purple);
+  display: flex;
+  height: 41px;
+  justify-content: center;
+  width: 41px;
+}
+
+.add-teacher-heading h2,
+.directory-heading h2 {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.add-teacher-heading p {
+  color: #857e8d;
+  font-size: 10px;
+  margin: 4px 0 0;
+}
+
+.add-teacher-card form {
+  align-items: end;
+  display: grid;
+  gap: 13px;
+  grid-template-columns: 0.8fr 1fr auto;
+  margin-top: 21px;
+}
+
+.add-teacher-card label {
+  color: #514a5a;
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  font-weight: 800;
+  gap: 7px;
+}
+
+.add-teacher-card input,
+.admin-search input {
+  background: #faf9fc;
+  border: 1px solid #ddd8e5;
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  outline: 0;
+  padding: 12px;
+}
+
+.add-teacher-card input:focus,
+.admin-search:focus-within {
+  border-color: #8064dd;
+  box-shadow: 0 0 0 3px rgba(91, 56, 210, 0.09);
+}
+
+.add-teacher-card form > button {
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-message {
+  align-items: center;
+  border-radius: 9px;
+  display: flex;
+  font-size: 11px;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 9px 11px;
+}
+
+.admin-success {
+  background: #e6f7ef;
+  color: #19775a;
+}
+
+.admin-error {
+  background: #fff0f3;
+  color: #b3294f;
+}
+
+.teacher-directory {
+  margin-top: 37px;
+}
+
+.directory-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 13px;
+}
+
+.directory-heading > div > span {
+  color: #88818f;
+  display: block;
+  font-size: 9px;
+  margin-top: 3px;
+}
+
+.admin-search {
+  align-items: center;
+  background: white;
+  border: 1px solid #ddd8e5;
+  border-radius: 10px;
+  color: #918a98;
+  display: flex;
+  gap: 7px;
+  padding-left: 11px;
+}
+
+.admin-search input {
+  background: transparent;
+  border: 0;
+  padding-left: 0;
+}
+
+.teacher-table {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.teacher-table-head,
+.teacher-row {
+  align-items: center;
+  display: grid;
+  gap: 15px;
+  grid-template-columns: 2fr 0.8fr 0.65fr 0.65fr;
+  padding: 12px 18px;
+}
+
+.teacher-table-head {
+  background: #faf9fc;
+  border-bottom: 1px solid var(--line);
+  color: #8b8492;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.teacher-row {
+  border-bottom: 1px solid var(--line);
+  min-height: 67px;
+}
+
+.teacher-row:last-of-type {
+  border-bottom: 0;
+}
+
+.teacher-identity {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.teacher-identity > i {
+  align-items: center;
+  background: var(--purple-soft);
+  border-radius: 50%;
+  color: var(--purple);
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  height: 37px;
+  justify-content: center;
+  width: 37px;
+}
+
+.teacher-identity > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.teacher-identity strong {
+  font-size: 12px;
+}
+
+.teacher-identity small {
+  align-items: center;
+  color: #88818f;
+  display: flex;
+  font-size: 9px;
+  gap: 4px;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teacher-role {
+  color: #645d6b;
+  font-size: 10px;
+}
+
+.teacher-access-status {
+  align-items: center;
+  display: flex;
+  font-size: 9px;
+  font-weight: 800;
+  gap: 5px;
+}
+
+.teacher-access-status::before {
+  border-radius: 50%;
+  content: "";
+  height: 6px;
+  width: 6px;
+}
+
+.access-active {
+  color: #187758;
+}
+
+.access-active::before {
+  background: #28a67c;
+}
+
+.access-inactive {
+  color: #9a5969;
+}
+
+.access-inactive::before {
+  background: #cd6981;
+}
+
+.teacher-row > button {
+  background: #f3effb;
+  border: 0;
+  border-radius: 8px;
+  color: var(--purple);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  justify-self: start;
+  padding: 8px 10px;
+}
+
+.teacher-row > button:disabled {
+  color: #918a98;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.directory-empty {
+  align-items: center;
+  color: #8c8494;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  gap: 9px;
+  padding: 45px;
+}
+
+@media (max-width: 760px) {
+  .admin-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 23px;
+  }
+
+  .admin-school-card {
+    width: 100%;
+  }
+
+  .add-teacher-card form {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-table-head {
+    display: none;
+  }
+
+  .teacher-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .teacher-role,
+  .teacher-access-status {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .admin-header > span {
+    font-size: 0;
+  }
+
+  .admin-main {
+    padding: 42px 15px 70px;
+  }
+
+  .admin-title h1 {
+    font-size: 40px;
+  }
+
+  .add-teacher-card {
+    padding: 19px;
+  }
+
+  .directory-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .admin-search input {
+    flex: 1;
+  }
+
+  .teacher-row {
+    padding: 13px;
   }
 }

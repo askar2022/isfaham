@@ -37,20 +37,21 @@ The `/api/translate` route accepts one short audio turn, transcribes it,
 translates it, and returns the translated voice. Audio is not written to a
 database or storage.
 
-## Teacher and parent flow
+## Staff and parent flow
 
 1. Apply the Supabase migrations in filename order:
    - `202607260001_initial_school_conversations.sql`
    - `202607260002_usage_analytics.sql`
-2. Insert a school and its approved teacher emails into `approved_teachers`.
+   - `202607260003_school_admin_portal.sql`
+2. Insert a school and its approved staff emails into `approved_teachers`.
    Supabase’s Table Editor can import a CSV into this table.
 3. In Supabase Authentication, change the email template to include
-   `{{ .Token }}` so teachers receive a six-digit code.
+   `{{ .Token }}` so staff receive a six-digit code.
 4. Disable open user signups. The server creates Auth users only after checking
    the approved-teacher table.
 5. Add the Supabase and Twilio variables from `.env.example` to Vercel.
 
-Teachers sign in at `/teacher/login`. They enter their approved email and verify
+Staff sign in at `/teacher/login`. They enter their approved email and verify
 the six-digit Supabase code. From `/teacher`, they create a conversation and
 enter the teacher and parent phone numbers in international format.
 
@@ -66,13 +67,33 @@ expire after 60 minutes, and ending a room closes its Twilio Proxy session.
 The second migration tracks privacy-safe operational totals: conversations,
 session length, turns, measured Azure speech duration, invitation and join
 counts, translation failures, and estimated provider cost. It does not store
-audio, transcripts in analytics, student names, or full phone numbers. Teachers
+audio, transcripts in analytics, student names, or full phone numbers. Staff
 see their own usage summary in the workspace. The `school_usage_daily` view is
 reserved for server-side school reporting.
 
 Cost values are estimates based on the rates in `.env.example`. Keep those
 rates synchronized with the actual Azure invoice before making pricing
 decisions.
+
+### School administrator portal
+
+After applying the third migration, promote the first administrator once in
+the Supabase SQL Editor:
+
+```sql
+update public.approved_teachers
+set is_admin = true
+where email = 'your-email@school.org';
+
+update public.profiles
+set is_admin = true
+where email = 'your-email@school.org';
+```
+
+The second statement is only necessary if that administrator has already
+signed in. Administrators can then open `/admin` to add, search, deactivate, and
+reactivate approved staff emails for their own school. Administrator accounts
+cannot be deactivated through the portal.
 
 ## Mobile app
 

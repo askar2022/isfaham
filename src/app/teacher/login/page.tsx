@@ -6,7 +6,7 @@ import { TeacherLoginForm } from "@/components/TeacherLoginForm";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Teacher sign in",
+  title: "Staff sign in",
 };
 
 export default async function TeacherLoginPage() {

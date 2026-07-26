@@ -14,6 +14,7 @@ import {
   MessageCircleMore,
   Phone,
   Plus,
+  ShieldCheck,
   UserCheck,
 } from "lucide-react";
 import { FormEvent, useState } from "react";
@@ -53,11 +54,13 @@ export function TeacherDashboard({
   schoolName,
   conversations,
   usage,
+  isAdmin,
 }: {
   teacherName: string;
   schoolName: string;
   conversations: RecentConversation[];
   usage: UsageSummary;
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
@@ -179,23 +182,31 @@ export function TeacherDashboard({
       <main className="teacher-main">
         <section className="teacher-welcome">
           <div>
-            <span className="section-kicker">Teacher workspace</span>
+            <span className="section-kicker">Staff workspace</span>
             <h1>Welcome, {teacherName.split(" ")[0]}.</h1>
             <p>
               Start a private Somali–English conversation with a family. They
               can join from their browser—no account or download needed.
             </p>
           </div>
-          <button
-            className="button"
-            onClick={() => {
-              setShowForm(true);
-              setCreated(null);
-            }}
-          >
-            <Plus size={18} />
-            New conversation
-          </button>
+          <div className="teacher-welcome-actions">
+            {isAdmin && (
+              <Link className="admin-link-button" href="/admin">
+                <ShieldCheck size={17} />
+                Manage teachers
+              </Link>
+            )}
+            <button
+              className="button"
+              onClick={() => {
+                setShowForm(true);
+                setCreated(null);
+              }}
+            >
+              <Plus size={18} />
+              New conversation
+            </button>
+          </div>
         </section>
 
         <section className="usage-section">
