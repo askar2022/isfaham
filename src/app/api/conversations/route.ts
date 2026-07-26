@@ -1,0 +1,165 @@
+import { NextResponse } from "next/server";
+import twilio from "twilio";
+
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+const PHONE_PATTERN = /^\+[1-9]\d{7,14}$/;
+
+type ConversationRecord = {
+  id: string;
+  public_token: string;
+};
+
+export async function POST(request: Request) {
+  try {
+    const { parentPhone, teacherPhone } = (await request.json()) as {
+      parentPhone?: string;
+      teacherPhone?: string;
+    };
+    const normalizedParentPhone = parentPhone?.replace(/[\s()-]/g, "");
+    const normalizedTeacherPhone = teacherPhone?.replace(/[\s()-]/g, "");
+
+    if (
+      !normalizedParentPhone ||
+      !normalizedTeacherPhone ||
+      !PHONE_PATTERN.test(normalizedParentPhone) ||
+      !PHONE_PATTERN.test(normalizedTeacherPhone)
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Enter both phone numbers with country codes, such as +16125550123.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (normalizedParentPhone === normalizedTeacherPhone) {
+      return NextResponse.json(
+        { error: "Teacher and parent phone numbers must be different." },
+        { status: 400 },
+      );
+    }
+
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("school_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      return NextResponse.json(
+        { error: "Your teacher profile is not ready." },
+        { status: 403 },
+      );
+    }
+
+    const { data, error: conversationError } = await supabase
+      .from("conversations")
+      .insert({
+        teacher_id: user.id,
+        school_id: profile.school_id,
+        parent_phone_last_four: normalizedParentPhone.slice(-4),
+      })
+      .select("id, public_token")
+      .single<ConversationRecord>();
+
+    if (conversationError || !data) {
+      throw conversationError ?? new Error("Conversation was not created.");
+    }
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
+      new URL(request.url).origin;
+    const conversationUrl = `${siteUrl}/c/${data.public_token}`;
+
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const proxyServiceSid = process.env.TWILIO_PROXY_SERVICE_SID;
+    let smsSent = false;
+    let smsError: string | undefined;
+
+    if (accountSid && authToken && proxyServiceSid) {
+      try {
+        const client = twilio(accountSid, authToken);
+        const session = await client.proxy.v1
+          .services(proxyServiceSid)
+          .sessions.create({
+            uniqueName: `isfaham-${data.id}`,
+            mode: "message-only",
+            ttl: 60,
+          });
+
+        const teacherParticipant = await client.proxy.v1
+          .services(proxyServiceSid)
+          .sessions(session.sid)
+          .participants.create({
+            identifier: normalizedTeacherPhone,
+            friendlyName: "Teacher",
+          });
+
+        await client.proxy.v1
+          .services(proxyServiceSid)
+          .sessions(session.sid)
+          .participants.create({
+            identifier: normalizedParentPhone,
+            friendlyName: "Parent",
+          });
+
+        await client.messages.create({
+          from: teacherParticipant.proxyIdentifier,
+          to: normalizedParentPhone,
+          body: `Your school invited you to an Isfaham Somali-English conversation. Open this private link: ${conversationUrl}\n\nThe link expires in 60 minutes.`,
+        });
+
+        await supabase
+          .from("conversations")
+          .update({
+            twilio_session_sid: session.sid,
+            invitation_status: "sent",
+            invitation_sent_at: new Date().toISOString(),
+          })
+          .eq("id", data.id);
+        smsSent = true;
+      } catch (twilioError) {
+        console.error("Twilio Proxy invitation failed:", twilioError);
+        await supabase
+          .from("conversations")
+          .update({ invitation_status: "failed" })
+          .eq("id", data.id);
+        smsError =
+          "The conversation was created, but the text message could not be sent.";
+      }
+    } else {
+      await supabase
+        .from("conversations")
+        .update({ invitation_status: "manual" })
+        .eq("id", data.id);
+      smsError =
+        "Twilio is not configured. Copy and share the private link manually.";
+    }
+
+    return NextResponse.json({
+      conversationId: data.id,
+      conversationUrl,
+      publicToken: data.public_token,
+      smsSent,
+      warning: smsError,
+    });
+  } catch (error) {
+    console.error("Conversation creation failed:", error);
+    return NextResponse.json(
+      { error: "We could not create the conversation. Please try again." },
+      { status: 500 },
+    );
+  }
+}

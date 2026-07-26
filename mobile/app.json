@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Isfaham",
+    "slug": "isfaham",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "isfaham",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.isfaham.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Isfaham uses the microphone to translate conversations between Somali and English."
+      }
+    },
+    "android": {
+      "package": "com.isfaham.app",
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-audio",
+      "expo-font",
+      "expo-asset"
+    ]
+  }
+}
