@@ -106,8 +106,8 @@ export function TeacherLoginForm() {
           Enter the six-digit code sent to <strong>{email}</strong>.
         </p>
         <label>
-          Six-digit code
           <input
+            aria-label="Six-digit code"
             autoComplete="one-time-code"
             autoFocus
             inputMode="numeric"

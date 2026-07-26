@@ -1595,8 +1595,8 @@ footer a:hover {
 
 .auth-full-brand {
   display: block;
-  height: 182px;
-  margin: -20px auto 4px;
+  height: 205px;
+  margin: -20px auto 12px;
   overflow: hidden;
   width: 260px;
 }
