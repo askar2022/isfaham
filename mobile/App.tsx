@@ -31,6 +31,7 @@ import {
   TranslationResult,
   translateRecording,
 } from "./src/lib/api";
+import { StaffRemote } from "./src/screens/StaffRemote";
 
 const LANGUAGES: Record<
   LanguageCode,
@@ -115,6 +116,7 @@ function ConversationCard({
 }
 
 function AppContent() {
+  const [showStaffRemote, setShowStaffRemote] = useState(false);
   const [source, setSource] = useState<LanguageCode>("so");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [transcriptExpanded, setTranscriptExpanded] = useState(true);
@@ -255,6 +257,10 @@ function AppContent() {
     );
   }, [turns.length]);
 
+  if (showStaffRemote) {
+    return <StaffRemote onClose={() => setShowStaffRemote(false)} />;
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <StatusBar style="dark" />
@@ -266,16 +272,29 @@ function AppContent() {
             <Text style={styles.logoTagline}>Live Translation</Text>
           </View>
         </View>
-        <Pressable
-          accessibilityLabel="Clear conversation"
-          onPress={clearConversation}
-          style={({ pressed }) => [
-            styles.headerButton,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <Ionicons name="refresh-outline" color="#4F4960" size={21} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            accessibilityLabel="Staff sign in and remote conversations"
+            onPress={() => setShowStaffRemote(true)}
+            style={({ pressed }) => [
+              styles.staffButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons color="#5B38D2" name="school-outline" size={16} />
+            <Text style={styles.staffButtonText}>Staff</Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="Clear conversation"
+            onPress={clearConversation}
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons name="refresh-outline" color="#4F4960" size={21} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.controls}>
@@ -532,6 +551,25 @@ const styles = StyleSheet.create({
     height: 38,
     justifyContent: "center",
     width: 38,
+  },
+  headerActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 7,
+  },
+  staffButton: {
+    alignItems: "center",
+    backgroundColor: "#F1EDFF",
+    borderRadius: 18,
+    flexDirection: "row",
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+  },
+  staffButtonText: {
+    color: "#5B38D2",
+    fontSize: 11,
+    fontWeight: "800",
   },
   scrollContent: {
     gap: 4,

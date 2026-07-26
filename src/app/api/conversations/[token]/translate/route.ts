@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { translateAudio } from "@/lib/azure";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/supabase/request-user";
 
 type RouteContext = {
   params: Promise<{ token: string }>;
@@ -31,18 +31,6 @@ function estimateCostMicrousd(
         translatedCharacters * speechPerMillionCharacters,
     ),
   );
-}
-
-async function currentUserId() {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user?.id ?? null;
-  } catch {
-    return null;
-  }
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -109,7 +97,7 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
-    const userId = await currentUserId();
+    const userId = (await getRequestUser(request))?.id ?? null;
     const speaker = userId === conversation.teacher_id ? "teacher" : "parent";
     const source = speaker === "teacher" ? "en" : "so";
     const target = source === "en" ? "so" : "en";

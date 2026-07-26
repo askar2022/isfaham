@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import twilio from "twilio";
 
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getRequestUser } from "@/lib/supabase/request-user";
 
 function normalizeUsPhone(phone?: string) {
   const digits = phone?.replace(/\D/g, "") ?? "";
@@ -51,14 +52,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getRequestUser(request);
 
     if (!user) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     }
+
+    const supabase = createAdminClient();
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")

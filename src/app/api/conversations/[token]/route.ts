@@ -2,25 +2,13 @@ import { NextResponse } from "next/server";
 import twilio from "twilio";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getRequestUser } from "@/lib/supabase/request-user";
 
 type RouteContext = {
   params: Promise<{ token: string }>;
 };
 
-async function currentUserId() {
-  try {
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    return user?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function GET(_: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const { token } = await context.params;
     const admin = createAdminClient();
@@ -65,7 +53,7 @@ export async function GET(_: Request, context: RouteContext) {
         )
         .eq("conversation_id", conversation.id)
         .order("created_at", { ascending: true }),
-      currentUserId(),
+      getRequestUser(request).then((user) => user?.id ?? null),
     ]);
 
     const role = userId === conversation.teacher_id ? "teacher" : "parent";
@@ -104,7 +92,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
 
-    const userId = await currentUserId();
+    const userId = (await getRequestUser(request))?.id ?? null;
     if (!userId) {
       return NextResponse.json({ error: "Teacher sign-in required." }, { status: 401 });
     }
