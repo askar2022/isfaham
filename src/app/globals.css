@@ -1595,16 +1595,17 @@ footer a:hover {
 
 .auth-full-brand {
   display: block;
-  height: 205px;
+  height: 225px;
   margin: -20px auto 12px;
   overflow: hidden;
-  width: 260px;
+  max-width: 100%;
+  width: 290px;
 }
 
 .auth-full-brand img {
   height: auto;
-  transform: translateY(-31px);
-  width: 260px;
+  transform: translateY(-12%);
+  width: 100%;
 }
 
 .auth-full-brand + label {
@@ -1673,6 +1674,12 @@ footer a:hover {
   text-align: left;
 }
 
+.teacher-login-form input::placeholder {
+  color: #b9b4c1;
+  font-weight: 400;
+  opacity: 1;
+}
+
 .teacher-login-form input[name="code"],
 .teacher-login-form input[inputmode="numeric"] {
   font-size: 25px;
@@ -1726,6 +1733,10 @@ footer a:hover {
   color: #817a89;
   font-size: 11px;
   margin-top: 19px;
+}
+
+.auth-support:hover {
+  color: var(--purple);
 }
 
 .spin {

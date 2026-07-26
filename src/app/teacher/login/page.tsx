@@ -27,7 +27,9 @@ export default async function TeacherLoginPage() {
   return (
     <main className="auth-page">
       <TeacherLoginForm />
-      <p className="auth-support">Powered by Isfaham</p>
+      <a className="auth-support" href="mailto:hello@isfaham.org">
+        Contact developer and designer Dr. Askar
+      </a>
     </main>
   );
 }

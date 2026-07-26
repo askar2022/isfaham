@@ -157,7 +157,7 @@ export function TeacherLoginForm() {
         />
       </label>
       <button className="button auth-submit" disabled={loading}>
-        {loading ? <Loader2 className="spin" size={19} /> : "Email my code"}
+        {loading ? <Loader2 className="spin" size={19} /> : "Send Code"}
         {!loading && <ArrowRight size={18} />}
       </button>
       {error && <p className="auth-error">{error}</p>}
