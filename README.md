@@ -18,6 +18,8 @@ The first working release needs:
 4. **Supabase** — accounts and usage data (optional until authentication ships)
 5. **Vercel** — website and secure API hosting
 6. **Expo EAS** — iOS/Android cloud builds and store submission
+7. **RevenueCat and Apple IAP** — iOS consumable Translation Credits
+8. **Stripe** — website credit checkout, school billing, and payment webhooks
 
 Never expose Azure or Resend secret keys in the Expo app. They belong in Vercel
 environment variables only.
@@ -43,17 +45,20 @@ database or storage.
    - `202607260001_initial_school_conversations.sql`
    - `202607260002_usage_analytics.sql`
    - `202607260003_school_admin_portal.sql`
+   - `202607260004_secure_trigger_functions.sql`
+   - `202607260005_translation_credits.sql`
+   - `202607260006_revenuecat_credits.sql`
 2. Insert a school and its approved staff emails into `approved_teachers`.
    Supabase’s Table Editor can import a CSV into this table.
 3. In Supabase Authentication, change the email template to include
    `{{ .Token }}` so staff receive a six-digit code.
-4. Disable open user signups. The server creates Auth users only after checking
-   the approved-teacher table.
+4. Keep email signups enabled for Individual accounts. Staff access remains
+   restricted by the approved-teacher table.
 5. Add the Supabase and Twilio variables from `.env.example` to Vercel.
 
 Staff sign in at `/teacher/login`. They enter their approved email and verify
 the six-digit Supabase code. From `/teacher`, they create a conversation and
-enter the teacher and parent phone numbers in international format.
+enter the teacher and parent 10-digit US phone numbers.
 
 Twilio Proxy creates a 60-minute message-only session, masks both numbers, and
 sends the parent a random conversation link. The parent opens that link on a
@@ -74,6 +79,41 @@ reserved for server-side school reporting.
 Cost values are estimates based on the rates in `.env.example`. Keep those
 rates synchronized with the actual Azure invoice before making pricing
 decisions.
+
+### Consumer Translation Credits
+
+The fifth migration creates a server-controlled wallet and immutable credit
+ledger. New consumers receive 2 trial minutes. In-person translations reserve
+up to one minute, then refund the unused seconds after Azure reports the actual
+speech duration. School staff usage is funded by the school and bypasses the
+personal wallet.
+
+On iOS, the app fetches localized prices from Apple and purchases the consumable
+products `isfaham_1_hour`, `isfaham_5_hours`, and `isfaham_10_hours` through
+RevenueCat. Configure `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` in `mobile/.env` and
+EAS. Add this RevenueCat webhook URL and set its Authorization header to
+`Bearer <REVENUECAT_WEBHOOK_AUTH_TOKEN>`:
+
+```text
+https://isfaham.org/api/revenuecat/webhook
+```
+
+Subscribe it to `NON_RENEWING_PURCHASE` events for the App Store. The server
+verifies the configured authorization token and grants credits idempotently by
+Apple transaction ID.
+
+Website packages are currently priced at $8 for one hour, $35 for five hours,
+and $65 for ten hours. Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+and the permanent Stripe Price IDs listed in `.env.example` in Vercel. The
+Stripe webhook endpoint is:
+
+```text
+https://isfaham.org/api/stripe/webhook
+```
+
+Subscribe that webhook to `checkout.session.completed`. Credit updates are
+idempotent and occur only after the signed Stripe webhook confirms payment.
+Never place Stripe secret keys in Expo environment variables.
 
 ### School administrator portal
 

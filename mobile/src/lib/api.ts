@@ -18,6 +18,7 @@ export async function translateRecording(
   uri: string,
   source: LanguageCode,
   target: LanguageCode,
+  accessToken: string,
 ): Promise<TranslationResult> {
   if (!apiUrl) {
     throw new Error(
@@ -35,6 +36,7 @@ export async function translateRecording(
 
   const response = await fetch(`${apiUrl}/api/translate`, {
     method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
     body: form,
   });
 

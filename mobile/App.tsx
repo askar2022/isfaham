@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import type { Session } from "@supabase/supabase-js";
 import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioPlayer,
+  useAudioPlayerStatus,
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
@@ -11,10 +13,11 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,6 +34,8 @@ import {
   TranslationResult,
   translateRecording,
 } from "./src/lib/api";
+import { supabase } from "./src/lib/supabase";
+import { CreditsScreen } from "./src/screens/CreditsScreen";
 import { StaffRemote } from "./src/screens/StaffRemote";
 
 const LANGUAGES: Record<
@@ -44,6 +49,7 @@ const LANGUAGES: Record<
 type ConversationTurn = TranslationResult & {
   id: string;
   createdAt: Date;
+  isDemo?: boolean;
 };
 
 function BrandMark() {
@@ -99,17 +105,19 @@ function ConversationCard({
           {LANGUAGES[turn.target].name}
         </Text>
         <Text style={styles.translatedText}>{turn.translatedText}</Text>
-        <Pressable
-          accessibilityLabel={`Play ${LANGUAGES[turn.target].name} translation`}
-          onPress={() => onPlay(turn)}
-          style={({ pressed }) => [
-            styles.listenButton,
-            pressed && styles.buttonPressed,
-          ]}
-        >
-          <Ionicons name="volume-medium" color="#5B38D2" size={18} />
-          <Text style={styles.listenText}>Listen again</Text>
-        </Pressable>
+        {!turn.isDemo && (
+          <Pressable
+            accessibilityLabel={`Play ${LANGUAGES[turn.target].name} translation`}
+            onPress={() => onPlay(turn)}
+            style={({ pressed }) => [
+              styles.listenButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons name="volume-medium" color="#5B38D2" size={18} />
+            <Text style={styles.listenText}>Listen again</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
@@ -117,6 +125,8 @@ function ConversationCard({
 
 function AppContent() {
   const [showStaffRemote, setShowStaffRemote] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
   const [source, setSource] = useState<LanguageCode>("so");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [transcriptExpanded, setTranscriptExpanded] = useState(true);
@@ -124,9 +134,35 @@ function AppContent() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
   const player = useAudioPlayer(null);
+  const playerStatus = useAudioPlayerStatus(player);
+  const [waveform] = useState(() =>
+    Array.from({ length: 7 }, () => new Animated.Value(0.35)),
+  );
   const target: LanguageCode = source === "so" ? "en" : "so";
 
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+
+    async function loadSession() {
+      if (!supabase) return;
+      const { data } = await supabase.auth.getSession();
+      if (active) setSession(data.session);
+    }
+
+    void loadSession();
+    const { data: listener } = supabase.auth.onAuthStateChange((_, next) => {
+      if (!active) return;
+      setSession(next);
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
   const statusText = useMemo(() => {
+    if (!session) return "Create a free account to translate";
     if (isTranslating) return "Translating your conversation…";
     if (recorderState.isRecording) {
       return `Tap to stop • ${formatDuration(recorderState.durationMillis)}`;
@@ -136,8 +172,74 @@ function AppContent() {
     isTranslating,
     recorderState.durationMillis,
     recorderState.isRecording,
+    session,
     source,
   ]);
+
+  const liveStatus = !session
+    ? {
+        title: "Explore Isfaham",
+        detail: "Try a sample or create a free Individual account",
+        icon: "sparkles" as const,
+      }
+    : isTranslating
+    ? {
+        title: "Translating…",
+        detail: `Preparing ${LANGUAGES[target].name}`,
+        icon: "sync" as const,
+      }
+    : recorderState.isRecording
+      ? {
+          title: "Listening…",
+          detail: `Speak ${LANGUAGES[source].name} clearly`,
+          icon: "mic" as const,
+        }
+      : playerStatus.playing
+        ? {
+            title: `Speaking ${LANGUAGES[target].name}…`,
+            detail: "Playing the translated voice",
+            icon: "volume-high" as const,
+          }
+        : turns.length
+          ? {
+              title: "Translation ready",
+              detail: "The latest translation appears below",
+              icon: "checkmark-circle" as const,
+            }
+          : {
+              title: "Ready to translate",
+              detail: "Choose who is speaking",
+              icon: "sparkles" as const,
+            };
+
+  useEffect(() => {
+    if (!recorderState.isRecording) {
+      waveform.forEach((value) => value.setValue(0.35));
+      return;
+    }
+
+    const animation = Animated.loop(
+      Animated.stagger(
+        80,
+        waveform.map((value) =>
+          Animated.sequence([
+            Animated.timing(value, {
+              duration: 280,
+              toValue: 1,
+              useNativeDriver: true,
+            }),
+            Animated.timing(value, {
+              duration: 280,
+              toValue: 0.35,
+              useNativeDriver: true,
+            }),
+          ]),
+        ),
+      ),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [recorderState.isRecording, waveform]);
 
   const playTranslation = useCallback(
     async (turn: ConversationTurn) => {
@@ -160,6 +262,10 @@ function AppContent() {
 
   const startRecording = useCallback(async () => {
     if (isTranslating) return;
+    if (!session) {
+      setShowCredits(true);
+      return;
+    }
 
     try {
       const permission = await requestRecordingPermissionsAsync();
@@ -184,7 +290,23 @@ function AppContent() {
         error instanceof Error ? error.message : "Please try again.",
       );
     }
-  }, [isTranslating, recorder]);
+  }, [isTranslating, recorder, session]);
+
+  const showSampleTranslation = useCallback(() => {
+    const sample: ConversationTurn = {
+      id: `demo-${Date.now()}`,
+      createdAt: new Date(),
+      originalText: "Sidee tahay?",
+      translatedText: "How are you?",
+      audioBase64: "",
+      audioMimeType: "audio/mpeg",
+      source: "so",
+      target: "en",
+      isDemo: true,
+    };
+    setTurns([sample]);
+    setTranscriptExpanded(true);
+  }, []);
 
   const stopAndTranslate = useCallback(async () => {
     if (!recorderState.isRecording) return;
@@ -200,7 +322,15 @@ function AppContent() {
       }
 
       setIsTranslating(true);
-      const result = await translateRecording(uri, source, target);
+      if (!session) {
+        throw new Error("Preparing your translation balance. Please try again.");
+      }
+      const result = await translateRecording(
+        uri,
+        source,
+        target,
+        session.access_token,
+      );
       const turn: ConversationTurn = {
         ...result,
         id: `${Date.now()}`,
@@ -215,10 +345,16 @@ function AppContent() {
         Haptics.NotificationFeedbackType.Success,
       );
     } catch (error) {
-      Alert.alert(
-        "Translation unavailable",
-        error instanceof Error ? error.message : "Please try that again.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Please try that again.";
+      if (message.includes("Translation Credits")) {
+        Alert.alert("Translation balance empty", message, [
+          { text: "Not now", style: "cancel" },
+          { text: "Add credits", onPress: () => setShowCredits(true) },
+        ]);
+      } else {
+        Alert.alert("Translation unavailable", message);
+      }
     } finally {
       setIsTranslating(false);
       await setAudioModeAsync({
@@ -233,6 +369,7 @@ function AppContent() {
     recorderState.isRecording,
     source,
     target,
+    session,
   ]);
 
   const switchSpeaker = useCallback(() => {
@@ -261,6 +398,15 @@ function AppContent() {
     return <StaffRemote onClose={() => setShowStaffRemote(false)} />;
   }
 
+  if (showCredits) {
+    return (
+      <CreditsScreen
+        onClose={() => setShowCredits(false)}
+        session={session}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <StatusBar style="dark" />
@@ -273,6 +419,17 @@ function AppContent() {
           </View>
         </View>
         <View style={styles.headerActions}>
+          <Pressable
+            accessibilityLabel="Translation credits"
+            onPress={() => setShowCredits(true)}
+            style={({ pressed }) => [
+              styles.headerButton,
+              styles.creditButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons color="#5B38D2" name="wallet-outline" size={19} />
+          </Pressable>
           <Pressable
             accessibilityLabel="Staff sign in and remote conversations"
             onPress={() => setShowStaffRemote(true)}
@@ -325,6 +482,14 @@ function AppContent() {
               <Text style={styles.languageName}>Somali</Text>
               <Text style={styles.languageNative}>Af-Soomaali</Text>
             </View>
+            {source === "so" && (
+              <Ionicons
+                color="#1D9A70"
+                name="checkmark-circle"
+                size={18}
+                style={styles.languageCheck}
+              />
+            )}
           </Pressable>
 
           <Pressable
@@ -364,7 +529,48 @@ function AppContent() {
               <Text style={styles.languageName}>English</Text>
               <Text style={styles.languageNative}>English</Text>
             </View>
+            {source === "en" && (
+              <Ionicons
+                color="#1D9A70"
+                name="checkmark-circle"
+                size={18}
+                style={styles.languageCheck}
+              />
+            )}
           </Pressable>
+        </View>
+
+        <View
+          style={[
+            styles.statusPanel,
+            turns.length > 0 && styles.statusPanelCompact,
+            recorderState.isRecording && styles.statusPanelListening,
+          ]}
+        >
+          {recorderState.isRecording ? (
+            <View style={styles.waveform}>
+              {waveform.map((value, index) => (
+                <Animated.View
+                  key={index}
+                  style={[
+                    styles.waveformBar,
+                    {
+                      height: 13 + (index % 4) * 5,
+                      transform: [{ scaleY: value }],
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.statusIcon}>
+              <Ionicons color="#5B38D2" name={liveStatus.icon} size={22} />
+            </View>
+          )}
+          <View style={styles.statusCopy}>
+            <Text style={styles.statusTitle}>{liveStatus.title}</Text>
+            <Text style={styles.statusDetail}>{liveStatus.detail}</Text>
+          </View>
         </View>
 
         <View style={styles.micArea}>
@@ -402,7 +608,7 @@ function AppContent() {
                 <Ionicons
                   name={recorderState.isRecording ? "stop" : "mic"}
                   color="white"
-                  size={40}
+                  size={44}
                 />
               )}
             </LinearGradient>
@@ -416,7 +622,9 @@ function AppContent() {
             {statusText}
           </Text>
           <Text style={styles.micHint}>
-            {recorderState.isRecording
+            {!session
+              ? "Includes 2 free translation minutes"
+              : recorderState.isRecording
               ? "Tap the stop button when finished"
               : "Tap to start • Tap again to translate"}
           </Text>
@@ -467,13 +675,42 @@ function AppContent() {
                   turn={turn}
                 />
               ))}
+            {!session && turns.some((turn) => turn.isDemo) && (
+              <Pressable
+                onPress={() => setShowCredits(true)}
+                style={styles.demoUpgrade}
+              >
+                <Text style={styles.demoUpgradeTitle}>
+                  Ready to try your own words?
+                </Text>
+                <Text style={styles.demoUpgradeText}>
+                  Create a free Individual account and receive 2 translation
+                  minutes.
+                </Text>
+              </Pressable>
+            )}
           </>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Start a conversation</Text>
-            <Text style={styles.emptyDescription}>
-              Tap the microphone, speak, then tap again to translate.
+            <Text style={styles.emptyTitle}>
+              {session ? "Start a conversation" : "See how Isfaham works"}
             </Text>
+            <Text style={styles.emptyDescription}>
+              {session
+                ? "Tap the microphone, speak, then tap again to translate."
+                : "Try a sample without creating an account."}
+            </Text>
+            {!session && (
+              <Pressable
+                onPress={showSampleTranslation}
+                style={styles.demoButton}
+              >
+                <Ionicons color="#5B38D2" name="sparkles" size={17} />
+                <Text style={styles.demoButtonText}>
+                  Try sample translation
+                </Text>
+              </Pressable>
+            )}
             <View style={styles.privacyNote}>
               <Ionicons name="shield-checkmark" color="#168261" size={17} />
               <Text style={styles.privacyText}>
@@ -556,6 +793,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 7,
+  },
+  creditButton: {
+    backgroundColor: "#F4F1FA",
+    borderRadius: 19,
   },
   staffButton: {
     alignItems: "center",
@@ -723,6 +964,42 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     textAlign: "center",
   },
+  demoButton: {
+    alignItems: "center",
+    backgroundColor: "#F1EDFF",
+    borderColor: "#D9CEF7",
+    borderRadius: 13,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 7,
+    marginTop: 18,
+    paddingHorizontal: 17,
+    paddingVertical: 12,
+  },
+  demoButtonText: {
+    color: "#5B38D2",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  demoUpgrade: {
+    backgroundColor: "#F1EDFF",
+    borderColor: "#D9CEF7",
+    borderRadius: 16,
+    borderWidth: 1,
+    marginTop: 4,
+    padding: 16,
+  },
+  demoUpgradeTitle: {
+    color: "#35224F",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  demoUpgradeText: {
+    color: "#71647E",
+    fontSize: 11,
+    lineHeight: 17,
+    marginTop: 4,
+  },
   privacyNote: {
     alignItems: "center",
     backgroundColor: "#EAF8F2",
@@ -767,6 +1044,10 @@ const styles = StyleSheet.create({
   languageCardActive: {
     backgroundColor: "#F1EDFF",
     borderColor: "#8A6CE5",
+    shadowColor: "#6A48D7",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   languageCode: {
     alignItems: "center",
@@ -797,6 +1078,9 @@ const styles = StyleSheet.create({
     fontSize: 9,
     marginTop: 2,
   },
+  languageCheck: {
+    marginLeft: "auto",
+  },
   switchButton: {
     alignItems: "center",
     backgroundColor: "#F0ECFC",
@@ -805,21 +1089,76 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 36,
   },
+  statusPanel: {
+    alignItems: "center",
+    backgroundColor: "#F5F1FF",
+    borderColor: "#E3DAFA",
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: "row",
+    marginTop: 13,
+    minHeight: 68,
+    paddingHorizontal: 15,
+    paddingVertical: 11,
+  },
+  statusPanelCompact: {
+    minHeight: 56,
+    paddingVertical: 8,
+  },
+  statusPanelListening: {
+    backgroundColor: "#FFF0F4",
+    borderColor: "#F3CBD7",
+  },
+  statusIcon: {
+    alignItems: "center",
+    backgroundColor: "#E9E1FF",
+    borderRadius: 19,
+    height: 38,
+    justifyContent: "center",
+    width: 38,
+  },
+  statusCopy: {
+    flex: 1,
+    marginLeft: 11,
+  },
+  statusTitle: {
+    color: "#2B2137",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  statusDetail: {
+    color: "#81768B",
+    fontSize: 10,
+    marginTop: 2,
+  },
+  waveform: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 3,
+    height: 38,
+    justifyContent: "center",
+    width: 58,
+  },
+  waveformBar: {
+    backgroundColor: "#D43A66",
+    borderRadius: 3,
+    width: 4,
+  },
   micArea: {
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 14,
   },
   micButton: {
     alignItems: "center",
-    borderRadius: 46,
+    borderRadius: 52,
     elevation: 8,
-    height: 92,
+    height: 104,
     justifyContent: "center",
     shadowColor: "#5B38D2",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
-    width: 92,
+    width: 104,
   },
   micButtonRecording: {
     shadowColor: "#D43866",
