@@ -7,6 +7,7 @@ import {
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -126,7 +127,7 @@ function AppContent() {
   const statusText = useMemo(() => {
     if (isTranslating) return "Translating your conversation…";
     if (recorderState.isRecording) {
-      return `Listening • ${formatDuration(recorderState.durationMillis)}`;
+      return `Tap to stop • ${formatDuration(recorderState.durationMillis)}`;
     }
     return `Tap to speak ${LANGUAGES[source].name}`;
   }, [
@@ -137,11 +138,20 @@ function AppContent() {
   ]);
 
   const playTranslation = useCallback(
-    (turn: ConversationTurn) => {
-      player.replace({
-        uri: `data:${turn.audioMimeType};base64,${turn.audioBase64}`,
-      });
-      player.play();
+    async (turn: ConversationTurn) => {
+      try {
+        const fileUri = `${FileSystem.cacheDirectory}isfaham-${turn.id}.mp3`;
+        await FileSystem.writeAsStringAsync(fileUri, turn.audioBase64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        player.replace({ uri: fileUri });
+        player.play();
+      } catch {
+        Alert.alert(
+          "Audio unavailable",
+          "The translation is ready, but its audio could not be played.",
+        );
+      }
     },
     [player],
   );
@@ -340,11 +350,20 @@ function AppContent() {
 
         <View style={styles.micArea}>
           <Pressable
-            accessibilityHint="Hold while speaking and release to translate"
+            accessibilityHint={
+              recorderState.isRecording
+                ? "Tap to stop recording and translate"
+                : "Tap to start recording"
+            }
             accessibilityLabel={`Speak ${LANGUAGES[source].name}`}
             disabled={isTranslating}
-            onPressIn={startRecording}
-            onPressOut={stopAndTranslate}
+            onPress={() => {
+              if (recorderState.isRecording) {
+                void stopAndTranslate();
+              } else {
+                void startRecording();
+              }
+            }}
           >
             <LinearGradient
               colors={
@@ -377,7 +396,11 @@ function AppContent() {
           >
             {statusText}
           </Text>
-          <Text style={styles.micHint}>Hold to talk • Release to translate</Text>
+          <Text style={styles.micHint}>
+            {recorderState.isRecording
+              ? "Tap the stop button when finished"
+              : "Tap to start • Tap again to translate"}
+          </Text>
         </View>
       </View>
 
@@ -430,7 +453,7 @@ function AppContent() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>Start a conversation</Text>
             <Text style={styles.emptyDescription}>
-              Hold the microphone while someone speaks.
+              Tap the microphone, speak, then tap again to translate.
             </Text>
             <View style={styles.privacyNote}>
               <Ionicons name="shield-checkmark" color="#168261" size={17} />
