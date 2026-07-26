@@ -1688,6 +1688,25 @@ footer a:hover {
   text-align: center;
 }
 
+.otp-fields {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.teacher-login-form .otp-input {
+  aspect-ratio: 1;
+  font-size: 25px;
+  letter-spacing: 0;
+  min-width: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.teacher-login-form .otp-input::placeholder {
+  color: #c4bdce;
+}
+
 .teacher-login-form input:focus {
   border-color: #8267dd;
   box-shadow: 0 0 0 3px rgba(91, 56, 210, 0.1);
@@ -2659,6 +2678,10 @@ footer a:hover {
 
   .teacher-login-form {
     padding: 28px 22px;
+  }
+
+  .otp-fields {
+    gap: 7px;
   }
 
   .room-message {

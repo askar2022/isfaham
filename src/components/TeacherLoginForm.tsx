@@ -3,7 +3,13 @@
 import { ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import {
+  ClipboardEvent,
+  FormEvent,
+  KeyboardEvent,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 
 import appLogo from "@/app/app_logo.png";
@@ -27,9 +33,52 @@ export function TeacherLoginForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [codeDigits, setCodeDigits] = useState(() => Array(6).fill(""));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const code = codeDigits.join("");
+
+  function updateCodeDigit(index: number, value: string) {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    setCodeDigits((current) => {
+      const next = [...current];
+      next[index] = digit;
+      return next;
+    });
+
+    if (digit && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleCodeKeyDown(
+    index: number,
+    event: KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (event.key === "Backspace" && !codeDigits[index] && index > 0) {
+      setCodeDigits((current) => {
+        const next = [...current];
+        next[index - 1] = "";
+        return next;
+      });
+      codeInputRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handleCodePaste(event: ClipboardEvent<HTMLInputElement>) {
+    const pastedDigits = event.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
+    if (!pastedDigits) return;
+    event.preventDefault();
+    setCodeDigits(
+      Array.from({ length: 6 }, (_, index) => pastedDigits[index] ?? ""),
+    );
+    codeInputRefs.current[Math.min(pastedDigits.length, 6) - 1]?.focus();
+  }
 
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,22 +154,28 @@ export function TeacherLoginForm() {
         <p>
           Enter the six-digit code sent to <strong>{email}</strong>.
         </p>
-        <label>
-          <input
-            aria-label="Six-digit code"
-            autoComplete="one-time-code"
-            autoFocus
-            inputMode="numeric"
-            maxLength={6}
-            onChange={(event) =>
-              setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-            }
-            pattern="[0-9]{6}"
-            placeholder="000000"
-            required
-            value={code}
-          />
-        </label>
+        <div aria-label="Six-digit verification code" className="otp-fields" role="group">
+          {codeDigits.map((digit, index) => (
+            <input
+              aria-label={`Digit ${index + 1}`}
+              autoComplete={index === 0 ? "one-time-code" : "off"}
+              autoFocus={index === 0}
+              className="otp-input"
+              inputMode="numeric"
+              key={index}
+              maxLength={1}
+              onChange={(event) => updateCodeDigit(index, event.target.value)}
+              onKeyDown={(event) => handleCodeKeyDown(index, event)}
+              onPaste={handleCodePaste}
+              placeholder="0"
+              ref={(element) => {
+                codeInputRefs.current[index] = element;
+              }}
+              required
+              value={digit}
+            />
+          ))}
+        </div>
         <button className="button auth-submit" disabled={loading || code.length !== 6}>
           {loading ? <Loader2 className="spin" size={19} /> : "Sign in securely"}
           {!loading && <ArrowRight size={18} />}
@@ -129,7 +184,7 @@ export function TeacherLoginForm() {
           className="auth-back"
           onClick={() => {
             setStep("email");
-            setCode("");
+            setCodeDigits(Array(6).fill(""));
             setError("");
           }}
           type="button"
