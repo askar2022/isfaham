@@ -10,13 +10,18 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.isfaham.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Isfaham uses the microphone to translate conversations between Somali and English."
+        "NSMicrophoneUsageDescription": "Isfaham uses the microphone to translate conversations between Somali and English.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.isfaham.app",
       "permissions": [
-        "RECORD_AUDIO"
+        "RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -24,6 +29,12 @@
       "expo-audio",
       "expo-font",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7a4f4bf4-4f8a-4fcd-9c37-7cc390a8797a"
+      }
+    },
+    "owner": "askar101"
   }
 }

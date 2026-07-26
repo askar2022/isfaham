@@ -116,6 +116,7 @@ function ConversationCard({
 function AppContent() {
   const [source, setSource] = useState<LanguageCode>("so");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
+  const [transcriptExpanded, setTranscriptExpanded] = useState(true);
   const [isTranslating, setIsTranslating] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
@@ -195,6 +196,7 @@ function AppContent() {
       };
 
       setTurns((current) => [...current, turn]);
+      setTranscriptExpanded(true);
       setSource(target);
       playTranslation(turn);
       await Haptics.notificationAsync(
@@ -251,7 +253,7 @@ function AppContent() {
           <BrandMark />
           <View>
             <Text style={styles.logoText}>Isfaham</Text>
-            <Text style={styles.logoTagline}>Understand each other.</Text>
+            <Text style={styles.logoTagline}>Live Translation</Text>
           </View>
         </View>
         <Pressable
@@ -265,63 +267,6 @@ function AppContent() {
           <Ionicons name="refresh-outline" color="#4F4960" size={21} />
         </Pressable>
       </View>
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          !turns.length && styles.emptyScrollContent,
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {turns.length ? (
-          <>
-            <View style={styles.livePill}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>Live conversation</Text>
-            </View>
-            {turns.map((turn) => (
-              <ConversationCard
-                key={turn.id}
-                onPlay={playTranslation}
-                turn={turn}
-              />
-            ))}
-          </>
-        ) : (
-          <View style={styles.emptyState}>
-            <LinearGradient
-              colors={["#F0EBFF", "#E7F8F1"]}
-              style={styles.emptyIllustration}
-            >
-              <View style={styles.personBubble}>
-                <Text style={styles.personBubbleText}>SO</Text>
-              </View>
-              <View style={styles.emptyWave}>
-                {[8, 19, 30, 19, 8].map((height, index) => (
-                  <View
-                    key={index}
-                    style={[styles.emptyWaveBar, { height }]}
-                  />
-                ))}
-              </View>
-              <View style={[styles.personBubble, styles.personBubbleEnglish]}>
-                <Text style={styles.personBubbleText}>EN</Text>
-              </View>
-            </LinearGradient>
-            <Text style={styles.emptyTitle}>Start a conversation</Text>
-            <Text style={styles.emptyDescription}>
-              Choose who is speaking, then hold the microphone while they talk.
-              Isfaham will translate and read it aloud.
-            </Text>
-            <View style={styles.privacyNote}>
-              <Ionicons name="shield-checkmark" color="#168261" size={17} />
-              <Text style={styles.privacyText}>
-                Audio is processed securely and not saved by default
-              </Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
 
       <View style={styles.controls}>
         <View style={styles.languageRow}>
@@ -419,7 +364,7 @@ function AppContent() {
                 <Ionicons
                   name={recorderState.isRecording ? "stop" : "mic"}
                   color="white"
-                  size={35}
+                  size={40}
                 />
               )}
             </LinearGradient>
@@ -435,6 +380,67 @@ function AppContent() {
           <Text style={styles.micHint}>Hold to talk • Release to translate</Text>
         </View>
       </View>
+
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          !turns.length && styles.emptyScrollContent,
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {turns.length ? (
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded: transcriptExpanded }}
+              onPress={() => setTranscriptExpanded((current) => !current)}
+              style={({ pressed }) => [
+                styles.transcriptHeader,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <View style={styles.transcriptHeading}>
+                <View style={styles.liveDot} />
+                <View>
+                  <Text style={styles.transcriptTitle}>
+                    Conversation transcript
+                  </Text>
+                  <Text style={styles.transcriptCount}>
+                    {turns.length}{" "}
+                    {turns.length === 1 ? "translation" : "translations"}
+                  </Text>
+                </View>
+              </View>
+              <Ionicons
+                color="#5B38D2"
+                name={transcriptExpanded ? "chevron-up" : "chevron-down"}
+                size={22}
+              />
+            </Pressable>
+            {transcriptExpanded &&
+              turns.map((turn) => (
+                <ConversationCard
+                  key={turn.id}
+                  onPlay={playTranslation}
+                  turn={turn}
+                />
+              ))}
+          </>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Start a conversation</Text>
+            <Text style={styles.emptyDescription}>
+              Hold the microphone while someone speaks.
+            </Text>
+            <View style={styles.privacyNote}>
+              <Ionicons name="shield-checkmark" color="#168261" size={17} />
+              <Text style={styles.privacyText}>
+                Audio is processed securely and not saved by default
+              </Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -513,16 +519,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
   },
-  livePill: {
+  transcriptHeader: {
     alignItems: "center",
-    alignSelf: "center",
-    backgroundColor: "#E8F8F1",
-    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E2DDE9",
+    borderRadius: 16,
+    borderWidth: 1,
     flexDirection: "row",
-    gap: 7,
+    justifyContent: "space-between",
     marginBottom: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  transcriptHeading: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
   },
   liveDot: {
     backgroundColor: "#2DA67B",
@@ -530,12 +542,15 @@ const styles = StyleSheet.create({
     height: 7,
     width: 7,
   },
-  liveText: {
-    color: "#177356",
-    fontSize: 11,
+  transcriptTitle: {
+    color: "#281F35",
+    fontSize: 14,
     fontWeight: "800",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
+  },
+  transcriptCount: {
+    color: "#857D8E",
+    fontSize: 10,
+    marginTop: 2,
   },
   turnGroup: {
     marginBottom: 25,
@@ -633,42 +648,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 15,
   },
-  emptyIllustration: {
-    alignItems: "center",
-    borderRadius: 34,
-    flexDirection: "row",
-    height: 155,
-    justifyContent: "center",
-    marginBottom: 28,
-    width: "100%",
-  },
-  personBubble: {
-    alignItems: "center",
-    backgroundColor: "#6540D9",
-    borderRadius: 33,
-    height: 66,
-    justifyContent: "center",
-    width: 66,
-  },
-  personBubbleEnglish: {
-    backgroundColor: "#239C76",
-  },
-  personBubbleText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "900",
-  },
-  emptyWave: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 4,
-    marginHorizontal: 17,
-  },
-  emptyWaveBar: {
-    backgroundColor: "#8063DB",
-    borderRadius: 3,
-    width: 3,
-  },
   emptyTitle: {
     color: "#241E2D",
     fontSize: 23,
@@ -701,8 +680,8 @@ const styles = StyleSheet.create({
   },
   controls: {
     backgroundColor: "#FFFFFF",
-    borderTopColor: "#E8E4ED",
-    borderTopWidth: 1,
+    borderBottomColor: "#E8E4ED",
+    borderBottomWidth: 1,
     paddingBottom: 18,
     paddingHorizontal: 17,
     paddingTop: 14,
@@ -771,15 +750,15 @@ const styles = StyleSheet.create({
   },
   micButton: {
     alignItems: "center",
-    borderRadius: 38,
+    borderRadius: 46,
     elevation: 8,
-    height: 76,
+    height: 92,
     justifyContent: "center",
     shadowColor: "#5B38D2",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
-    width: 76,
+    width: 92,
   },
   micButtonRecording: {
     shadowColor: "#D43866",

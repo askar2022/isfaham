@@ -1,3 +1,6 @@
+import { fetch } from "expo/fetch";
+import { File } from "expo-file-system";
+
 export type LanguageCode = "so" | "en";
 
 export type TranslationResult = {
@@ -27,11 +30,7 @@ export async function translateRecording(
   form.append("target", target);
   form.append(
     "audio",
-    {
-      uri,
-      name: `isfaham-${Date.now()}.m4a`,
-      type: "audio/mp4",
-    } as unknown as Blob,
+    new File(uri),
   );
 
   const response = await fetch(`${apiUrl}/api/translate`, {
