@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { TeacherDashboard } from "@/components/TeacherDashboard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -29,6 +30,7 @@ export default async function TeacherPage() {
     redirect("/teacher/login?error=profile");
   }
 
+  const usageClient = profile.is_admin ? createAdminClient() : supabase;
   const [
     { data: school },
     { data: conversationRows },
@@ -41,12 +43,15 @@ export default async function TeacherPage() {
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false })
       .limit(12),
-    supabase
+    usageClient
       .from("conversations")
       .select(
         "started_at, ended_at, invitation_sent_at, parent_joined_at, turn_count, speech_duration_ms, translation_failure_count, estimated_cost_microusd",
       )
-      .eq("teacher_id", user.id),
+      .eq(
+        profile.is_admin ? "school_id" : "teacher_id",
+        profile.is_admin ? profile.school_id : user.id,
+      ),
   ]);
 
   const conversations = (conversationRows ?? []).map((conversation) => ({
@@ -115,7 +120,9 @@ export default async function TeacherPage() {
           ? (usage.joins / usage.invitations) * 100
           : 0,
         translationFailures: usage.translationFailures,
-        estimatedCostUsd: usage.estimatedCostMicrousd / 1_000_000,
+        estimatedCostUsd: profile.is_admin
+          ? usage.estimatedCostMicrousd / 1_000_000
+          : 0,
       }}
     />
   );

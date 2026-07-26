@@ -5,6 +5,7 @@ import {
   AudioLines,
   BarChart3,
   Check,
+  ChevronDown,
   Clock3,
   Copy,
   DollarSign,
@@ -13,7 +14,6 @@ import {
   LogOut,
   MessageCircleMore,
   Phone,
-  Plus,
   ShieldCheck,
   UserCheck,
 } from "lucide-react";
@@ -63,7 +63,6 @@ export function TeacherDashboard({
   isAdmin: boolean;
 }) {
   const router = useRouter();
-  const [showForm, setShowForm] = useState(false);
   const [teacherPhone, setTeacherPhone] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -106,11 +105,15 @@ export function TeacherDashboard({
       value: usage.translationFailures.toLocaleString(),
       icon: Link2,
     },
-    {
-      label: "Estimated AI cost",
-      value: `$${usage.estimatedCostUsd.toFixed(2)}`,
-      icon: DollarSign,
-    },
+    ...(isAdmin
+      ? [
+          {
+            label: "Estimated AI cost",
+            value: `$${usage.estimatedCostUsd.toFixed(2)}`,
+            icon: DollarSign,
+          },
+        ]
+      : []),
   ];
 
   async function createConversation(event: FormEvent<HTMLFormElement>) {
@@ -189,48 +192,17 @@ export function TeacherDashboard({
               can join from their browser—no account or download needed.
             </p>
           </div>
-          <div className="teacher-welcome-actions">
-            {isAdmin && (
+          {isAdmin && (
+            <div className="teacher-welcome-actions">
               <Link className="admin-link-button" href="/admin">
                 <ShieldCheck size={17} />
-                Manage teachers
+                Manage staff
               </Link>
-            )}
-            <button
-              className="button"
-              onClick={() => {
-                setShowForm(true);
-                setCreated(null);
-              }}
-            >
-              <Plus size={18} />
-              New conversation
-            </button>
-          </div>
-        </section>
-
-        <section className="usage-section">
-          <div className="usage-heading">
-            <div>
-              <h2>Your usage</h2>
-              <span>All time • No audio or transcript data</span>
             </div>
-          </div>
-          <div className="usage-grid">
-            {usageCards.map(({ label, value, icon: Icon }) => (
-              <article className="usage-card" key={label}>
-                <span className="usage-card-icon">
-                  <Icon size={18} />
-                </span>
-                <strong>{value}</strong>
-                <small>{label}</small>
-              </article>
-            ))}
-          </div>
+          )}
         </section>
 
-        {showForm && (
-          <section className="create-conversation-card">
+        <section className="create-conversation-card">
             <div className="create-card-heading">
               <div>
                 <h2>Invite a parent</h2>
@@ -238,12 +210,6 @@ export function TeacherDashboard({
                   Twilio hides both numbers and sends a private, expiring link.
                 </p>
               </div>
-              <button
-                aria-label="Close invitation form"
-                onClick={() => setShowForm(false)}
-              >
-                ×
-              </button>
             </div>
 
             {created ? (
@@ -273,6 +239,16 @@ export function TeacherDashboard({
                   Enter conversation
                   <ArrowRight size={18} />
                 </Link>
+                <button
+                  className="button button-secondary"
+                  onClick={() => {
+                    setCreated(null);
+                    setParentPhone("");
+                  }}
+                  type="button"
+                >
+                  Invite another parent
+                </button>
               </div>
             ) : (
               <form className="conversation-form" onSubmit={createConversation}>
@@ -285,7 +261,7 @@ export function TeacherDashboard({
                     autoComplete="tel"
                     inputMode="tel"
                     onChange={(event) => setTeacherPhone(event.target.value)}
-                    placeholder="+1 612 555 0123"
+                    placeholder="612 555 0123"
                     required
                     value={teacherPhone}
                   />
@@ -300,11 +276,11 @@ export function TeacherDashboard({
                     autoComplete="off"
                     inputMode="tel"
                     onChange={(event) => setParentPhone(event.target.value)}
-                    placeholder="+1 612 555 0456"
+                    placeholder="612 555 0456"
                     required
                     value={parentPhone}
                   />
-                  <small>Include the country code. The link expires in one hour.</small>
+                  <small>Enter the area code and number. The link expires in one hour.</small>
                 </label>
                 <button className="button" disabled={loading}>
                   {loading ? <Loader2 className="spin" size={18} /> : <Link2 size={18} />}
@@ -313,8 +289,31 @@ export function TeacherDashboard({
                 {error && <p className="auth-error">{error}</p>}
               </form>
             )}
-          </section>
-        )}
+        </section>
+
+        <details className="usage-section">
+          <summary className="usage-heading">
+            <div>
+              <h2>{isAdmin ? "School usage" : "Your usage"}</h2>
+              <span>
+                {isAdmin ? "All staff" : "Your activity"} • All time • No audio
+                or transcript data
+              </span>
+            </div>
+            <ChevronDown aria-hidden="true" size={20} />
+          </summary>
+          <div className="usage-grid">
+            {usageCards.map(({ label, value, icon: Icon }) => (
+              <article className="usage-card" key={label}>
+                <span className="usage-card-icon">
+                  <Icon size={18} />
+                </span>
+                <strong>{value}</strong>
+                <small>{label}</small>
+              </article>
+            ))}
+          </div>
+        </details>
 
         <section className="recent-section">
           <div className="recent-heading">

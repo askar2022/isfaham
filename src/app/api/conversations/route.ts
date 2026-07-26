@@ -3,7 +3,19 @@ import twilio from "twilio";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-const PHONE_PATTERN = /^\+[1-9]\d{7,14}$/;
+function normalizeUsPhone(phone?: string) {
+  const digits = phone?.replace(/\D/g, "") ?? "";
+
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`;
+  }
+
+  return null;
+}
 
 type ConversationRecord = {
   id: string;
@@ -16,19 +28,17 @@ export async function POST(request: Request) {
       parentPhone?: string;
       teacherPhone?: string;
     };
-    const normalizedParentPhone = parentPhone?.replace(/[\s()-]/g, "");
-    const normalizedTeacherPhone = teacherPhone?.replace(/[\s()-]/g, "");
+    const normalizedParentPhone = normalizeUsPhone(parentPhone);
+    const normalizedTeacherPhone = normalizeUsPhone(teacherPhone);
 
     if (
       !normalizedParentPhone ||
-      !normalizedTeacherPhone ||
-      !PHONE_PATTERN.test(normalizedParentPhone) ||
-      !PHONE_PATTERN.test(normalizedTeacherPhone)
+      !normalizedTeacherPhone
     ) {
       return NextResponse.json(
         {
           error:
-            "Enter both phone numbers with country codes, such as +16125550123.",
+            "Enter both 10-digit US phone numbers, including the area code.",
         },
         { status: 400 },
       );

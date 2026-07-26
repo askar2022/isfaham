@@ -144,7 +144,6 @@ export function TeacherLoginForm() {
   return (
     <form className="teacher-login-form" onSubmit={requestCode}>
       <LoginLogo />
-      <h1>Staff sign in</h1>
       <label>
         School email
         <input

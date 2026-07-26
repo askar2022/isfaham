@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Check,
   Loader2,
+  LogOut,
   Mail,
   Search,
   ShieldCheck,
@@ -11,7 +12,10 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 type Teacher = {
   email: string;
@@ -28,6 +32,7 @@ export function AdminTeacherPortal({
   schoolName: string;
   initialTeachers: Teacher[];
 }) {
+  const router = useRouter();
   const [teachers, setTeachers] = useState(initialTeachers);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -128,6 +133,13 @@ export function AdminTeacherPortal({
 
   const activeCount = teachers.filter((teacher) => teacher.is_active).length;
 
+  async function signOut() {
+    const supabase = createBrowserSupabaseClient();
+    await supabase.auth.signOut();
+    router.replace("/teacher/login");
+    router.refresh();
+  }
+
   return (
     <main className="admin-page">
       <header className="admin-header">
@@ -135,10 +147,16 @@ export function AdminTeacherPortal({
           <ArrowLeft size={18} />
           Staff workspace
         </Link>
-        <span>
-          <ShieldCheck size={17} />
-          School administrator
-        </span>
+        <div className="admin-header-actions">
+          <span>
+            <ShieldCheck size={17} />
+            School administrator
+          </span>
+          <button onClick={signOut}>
+            <LogOut size={16} />
+            Sign out
+          </button>
+        </div>
       </header>
 
       <div className="admin-main">

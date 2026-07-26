@@ -1595,7 +1595,7 @@ footer a:hover {
 
 .auth-full-brand {
   display: block;
-  height: 158px;
+  height: 182px;
   margin: -20px auto 4px;
   overflow: hidden;
   width: 260px;
@@ -1605,6 +1605,10 @@ footer a:hover {
   height: auto;
   transform: translateY(-31px);
   width: 260px;
+}
+
+.auth-full-brand + label {
+  margin-top: 10px;
 }
 
 .teacher-login-form {
@@ -1857,9 +1861,28 @@ footer a:hover {
 
 .usage-heading {
   align-items: flex-end;
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
+  list-style: none;
+  margin-bottom: 0;
+}
+
+.usage-heading::-webkit-details-marker {
+  display: none;
+}
+
+.usage-section[open] .usage-heading {
   margin-bottom: 14px;
+}
+
+.usage-heading > svg {
+  color: var(--purple);
+  transition: transform 160ms ease;
+}
+
+.usage-section[open] .usage-heading > svg {
+  transform: rotate(180deg);
 }
 
 .usage-heading h2 {
@@ -2090,6 +2113,12 @@ footer a:hover {
 .invite-success > .button {
   grid-column: 1 / -1;
   justify-self: start;
+}
+
+.invite-success > .button-secondary {
+  background: white;
+  border: 1px solid #d4cce6;
+  color: var(--purple);
 }
 
 .recent-section {
@@ -2643,7 +2672,8 @@ footer a:hover {
 }
 
 .admin-header a,
-.admin-header > span {
+.admin-header-actions > span,
+.admin-header-actions > button {
   align-items: center;
   display: flex;
   font-size: 11px;
@@ -2655,10 +2685,25 @@ footer a:hover {
   color: var(--purple);
 }
 
-.admin-header > span {
+.admin-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.admin-header-actions > span {
   background: var(--purple-soft);
   border-radius: 18px;
   color: var(--purple);
+  padding: 7px 10px;
+}
+
+.admin-header-actions > button {
+  background: white;
+  border: 1px solid #ddd7e8;
+  border-radius: 9px;
+  color: #655e6d;
+  cursor: pointer;
   padding: 7px 10px;
 }
 
@@ -3030,7 +3075,7 @@ footer a:hover {
 }
 
 @media (max-width: 540px) {
-  .admin-header > span {
+  .admin-header-actions > span {
     font-size: 0;
   }
 
