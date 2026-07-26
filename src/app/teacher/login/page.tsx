@@ -1,8 +1,5 @@
-import Image from "next/image";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
-import appIcon from "@/app/app_icon.png";
 import { TeacherLoginForm } from "@/components/TeacherLoginForm";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -29,14 +26,8 @@ export default async function TeacherLoginPage() {
 
   return (
     <main className="auth-page">
-      <Link className="auth-brand" href="/">
-        <Image alt="" height={42} priority src={appIcon} width={42} />
-        <strong>Isfaham</strong>
-      </Link>
       <TeacherLoginForm />
-      <p className="auth-support">
-        Need access? Contact your school administrator.
-      </p>
+      <p className="auth-support">Powered by Isfaham</p>
     </main>
   );
 }

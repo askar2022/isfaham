@@ -1593,6 +1593,20 @@ footer a:hover {
   box-shadow: 0 5px 14px rgba(67, 55, 212, 0.2);
 }
 
+.auth-full-brand {
+  display: block;
+  height: 158px;
+  margin: -20px auto 4px;
+  overflow: hidden;
+  width: 260px;
+}
+
+.auth-full-brand img {
+  height: auto;
+  transform: translateY(-31px);
+  width: 260px;
+}
+
 .teacher-login-form {
   background: white;
   border: 1px solid var(--line);
@@ -1620,6 +1634,10 @@ footer a:hover {
   font-size: 30px;
   letter-spacing: -1.3px;
   margin: 0 0 10px;
+}
+
+.teacher-login-form h1 + label {
+  margin-top: 25px;
 }
 
 .teacher-login-form > p {

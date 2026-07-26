@@ -1,12 +1,27 @@
 "use client";
 
-import { ArrowRight, Loader2, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import appLogo from "@/app/app_logo.png";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 type Step = "email" | "code";
+
+function LoginLogo() {
+  return (
+    <Link
+      aria-label="Isfaham home"
+      className="auth-full-brand"
+      href="/"
+    >
+      <Image alt="Isfaham" priority src={appLogo} />
+    </Link>
+  );
+}
 
 export function TeacherLoginForm() {
   const router = useRouter();
@@ -52,17 +67,24 @@ export function TeacherLoginForm() {
 
     try {
       const supabase = createBrowserSupabaseClient();
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email: email.trim().toLowerCase(),
-        token: code.trim(),
-        type: "email",
-      });
+      const { data: verification, error: verifyError } =
+        await supabase.auth.verifyOtp({
+          email: email.trim().toLowerCase(),
+          token: code.trim(),
+          type: "email",
+        });
 
       if (verifyError) {
         throw new Error("That code is incorrect or has expired.");
       }
 
-      router.replace("/teacher");
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", verification.user?.id ?? "")
+        .maybeSingle();
+
+      router.replace(profile?.is_admin ? "/admin" : "/teacher");
       router.refresh();
     } catch (verificationError) {
       setError(
@@ -78,9 +100,7 @@ export function TeacherLoginForm() {
   if (step === "code") {
     return (
       <form className="teacher-login-form" onSubmit={verifyCode}>
-        <div className="auth-icon">
-          <Mail size={25} />
-        </div>
+        <LoginLogo />
         <h1>Check your email</h1>
         <p>
           Enter the six-digit code sent to <strong>{email}</strong>.
@@ -123,14 +143,8 @@ export function TeacherLoginForm() {
 
   return (
     <form className="teacher-login-form" onSubmit={requestCode}>
-      <div className="auth-icon">
-        <ShieldCheck size={25} />
-      </div>
+      <LoginLogo />
       <h1>Staff sign in</h1>
-      <p>
-        No password needed. We’ll email a secure six-digit code to your approved
-        school address.
-      </p>
       <label>
         School email
         <input
@@ -148,7 +162,6 @@ export function TeacherLoginForm() {
         {!loading && <ArrowRight size={18} />}
       </button>
       {error && <p className="auth-error">{error}</p>}
-      <small>Only emails approved by your school can sign in.</small>
     </form>
   );
 }
