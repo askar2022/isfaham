@@ -15,7 +15,7 @@ export async function GET(request: Request, context: RouteContext) {
     const { data: conversation } = await admin
       .from("conversations")
       .select(
-        "id, teacher_id, school_id, status, parent_language, expires_at, created_at",
+        "id, teacher_id, host_user_id, conversation_type, school_id, status, parent_language, expires_at, created_at",
       )
       .eq("public_token", token)
       .maybeSingle();
@@ -45,7 +45,13 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     const [{ data: school }, { data: messages }, userId] = await Promise.all([
-      admin.from("schools").select("name").eq("id", conversation.school_id).single(),
+      conversation.school_id
+        ? admin
+            .from("schools")
+            .select("name")
+            .eq("id", conversation.school_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
       admin
         .from("conversation_messages")
         .select(
@@ -56,7 +62,8 @@ export async function GET(request: Request, context: RouteContext) {
       getRequestUser(request).then((user) => user?.id ?? null),
     ]);
 
-    const role = userId === conversation.teacher_id ? "teacher" : "parent";
+    const hostId = conversation.host_user_id ?? conversation.teacher_id;
+    const role = userId === hostId ? "teacher" : "parent";
 
     if (role === "parent" && status !== "ended") {
       await admin
@@ -69,8 +76,12 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({
       id: conversation.id,
       status,
+      conversationType: conversation.conversation_type,
       expiresAt: conversation.expires_at,
-      schoolName: school?.name ?? "Your school",
+      schoolName:
+        conversation.conversation_type === "consumer"
+          ? "Isfaham conversation"
+          : school?.name ?? "Your school",
       role,
       messages: messages ?? [],
     });
@@ -100,12 +111,33 @@ export async function PATCH(request: Request, context: RouteContext) {
     const admin = createAdminClient();
     const { data: conversation } = await admin
       .from("conversations")
-      .select("id, teacher_id, twilio_session_sid")
+      .select(
+        "id, teacher_id, host_user_id, conversation_type, twilio_session_sid",
+      )
       .eq("public_token", token)
       .maybeSingle();
 
-    if (!conversation || conversation.teacher_id !== userId) {
+    const hostId = conversation?.host_user_id ?? conversation?.teacher_id;
+    if (!conversation || hostId !== userId) {
       return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+    }
+
+    if (
+      status === "active" &&
+      conversation.conversation_type === "consumer" &&
+      conversation.host_user_id
+    ) {
+      const { data: wallet } = await admin
+        .from("credit_wallets")
+        .select("balance_seconds")
+        .eq("user_id", conversation.host_user_id)
+        .maybeSingle();
+      if (!wallet || wallet.balance_seconds < 60) {
+        return NextResponse.json(
+          { error: "Add Translation Credits before starting this conversation." },
+          { status: 402 },
+        );
+      }
     }
 
     await admin

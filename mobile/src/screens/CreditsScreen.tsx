@@ -51,8 +51,8 @@ export function CreditsScreen({
   onClose: () => void;
   session: Session | null;
 }) {
-  if (!session) {
-    return <IndividualSignIn onClose={onClose} />;
+  if (!session || session.user.is_anonymous) {
+    return <IndividualSignIn onClose={onClose} session={session} />;
   }
   return <CreditWallet onClose={onClose} session={session} />;
 }
@@ -282,7 +282,13 @@ function CreditWallet({
   );
 }
 
-function IndividualSignIn({ onClose }: { onClose: () => void }) {
+function IndividualSignIn({
+  onClose,
+  session,
+}: {
+  onClose: () => void;
+  session: Session | null;
+}) {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -297,10 +303,13 @@ function IndividualSignIn({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setError("");
     try {
-      const { error: sendError } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: { shouldCreateUser: true },
-      });
+      const normalizedEmail = email.trim().toLowerCase();
+      const { error: sendError } = session?.user.is_anonymous
+        ? await supabase.auth.updateUser({ email: normalizedEmail })
+        : await supabase.auth.signInWithOtp({
+            email: normalizedEmail,
+            options: { shouldCreateUser: true },
+          });
       if (sendError) throw sendError;
       setCodeSent(true);
     } catch (sendError) {
@@ -322,9 +331,10 @@ function IndividualSignIn({ onClose }: { onClose: () => void }) {
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: code,
-        type: "email",
+        type: session?.user.is_anonymous ? "email_change" : "email",
       });
       if (verifyError) throw new Error("That code is incorrect or has expired.");
+      onClose();
     } catch (verifyError) {
       setError(
         verifyError instanceof Error ? verifyError.message : "Please try again.",
@@ -357,7 +367,9 @@ function IndividualSignIn({ onClose }: { onClose: () => void }) {
           <Text style={styles.accountDescription}>
             {codeSent
               ? `Enter the six-digit code sent to ${email}.`
-              : "Save your balance across devices and receive 2 free translation minutes."}
+              : session?.user.is_anonymous
+                ? "Keep your remaining trial balance, host remote conversations, and purchase more translation time."
+                : "Save your balance across devices and receive 2 free translation minutes."}
           </Text>
           <TextInput
             autoCapitalize="none"

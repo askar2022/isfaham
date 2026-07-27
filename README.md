@@ -48,13 +48,18 @@ database or storage.
    - `202607260004_secure_trigger_functions.sql`
    - `202607260005_translation_credits.sql`
    - `202607260006_revenuecat_credits.sql`
+   - `202607260007_consumer_remote_conversations.sql`
 2. Insert a school and its approved staff emails into `approved_teachers`.
    Supabase’s Table Editor can import a CSV into this table.
 3. In Supabase Authentication, change the email template to include
    `{{ .Token }}` so staff receive a six-digit code.
-4. Keep email signups enabled for Individual accounts. Staff access remains
-   restricted by the approved-teacher table.
-5. Add the Supabase and Twilio variables from `.env.example` to Vercel.
+4. Enable anonymous sign-ins for the device-based 2-minute trial and enable
+   manual identity linking so trial users can add an email without losing their
+   wallet. Keep email signups enabled for Individual accounts. Staff access
+   remains restricted by the approved-teacher table.
+5. Set the Confirm signup, Magic Link, and Change Email Address templates to
+   display `{{ .Token }}` so every account flow sends a six-digit code.
+6. Add the Supabase and Twilio variables from `.env.example` to Vercel.
 
 Staff sign in at `/teacher/login`. They enter their approved email and verify
 the six-digit Supabase code. From `/teacher`, they create a conversation and
@@ -101,6 +106,13 @@ https://isfaham.org/api/revenuecat/webhook
 Subscribe it to `NON_RENEWING_PURCHASE` events for the App Store. The server
 verifies the configured authorization token and grants credits idempotently by
 Apple transaction ID.
+
+New devices receive a two-minute anonymous trial. Trial users can translate on
+one shared phone without creating an account. Inviting another phone requires
+converting that anonymous session into an Individual account, which preserves
+the same wallet. The host shares a private link or QR code; the guest joins
+without an account, and all speech from both phones is deducted only from the
+host wallet.
 
 Website packages are currently priced at $8 for one hour, $35 for five hours,
 and $65 for ten hours. Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,

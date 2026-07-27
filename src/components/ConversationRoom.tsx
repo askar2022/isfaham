@@ -32,6 +32,7 @@ type Message = {
 type Room = {
   id: string;
   status: RoomStatus;
+  conversationType: "school" | "consumer";
   expiresAt: string;
   schoolName: string;
   role: Role;
@@ -306,6 +307,7 @@ export function ConversationRoom({ token }: { token: string }) {
 
   if (room.status === "waiting") {
     const isTeacher = room.role === "teacher";
+    const isConsumer = room.conversationType === "consumer";
     return (
       <main className="room-state-page waiting-page">
         <div className="waiting-logo">
@@ -316,12 +318,18 @@ export function ConversationRoom({ token }: { token: string }) {
           {room.schoolName}
         </span>
         <h1>
-          {isTeacher ? "Your family has a private link." : "Sug macallinkaaga."}
+          {isTeacher
+            ? "Your guest has a private link."
+            : isConsumer
+              ? "Your host will begin shortly."
+              : "Sug macallinkaaga."}
         </h1>
         <p>
           {isTeacher
-            ? "Start when you and the parent are both ready."
-            : "Please wait for the teacher to begin. Fadlan sug inta macallinku bilaabayo."}
+            ? "Start when you and your guest are both ready."
+            : isConsumer
+              ? "Please wait for the host to begin. You can join without an account."
+              : "Please wait for the teacher to begin. Fadlan sug inta macallinku bilaabayo."}
         </p>
         {isTeacher ? (
           <button
@@ -418,7 +426,15 @@ export function ConversationRoom({ token }: { token: string }) {
               className={`room-message ${mine ? "room-message-mine" : "room-message-theirs"}`}
               key={message.id}
             >
-              <span>{message.speaker === "teacher" ? "Teacher" : "Parent"}</span>
+              <span>
+                {room.conversationType === "consumer"
+                  ? message.speaker === "teacher"
+                    ? "Host"
+                    : "Guest"
+                  : message.speaker === "teacher"
+                    ? "Teacher"
+                    : "Parent"}
+              </span>
               <p>{message.original_text}</p>
               <div className="room-translation">
                 <Sparkles size={13} />

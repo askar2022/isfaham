@@ -25,16 +25,20 @@ type ConversationRecord = {
 
 export async function POST(request: Request) {
   try {
-    const { parentPhone, teacherPhone } = (await request.json()) as {
+    const { parentPhone, teacherPhone, conversationType } =
+      (await request.json()) as {
       parentPhone?: string;
       teacherPhone?: string;
+      conversationType?: "school" | "consumer";
     };
+    const isConsumer = conversationType === "consumer";
     const normalizedParentPhone = normalizeUsPhone(parentPhone);
     const normalizedTeacherPhone = normalizeUsPhone(teacherPhone);
 
     if (
-      !normalizedParentPhone ||
-      !normalizedTeacherPhone
+      !isConsumer &&
+      (!normalizedParentPhone ||
+        !normalizedTeacherPhone)
     ) {
       return NextResponse.json(
         {
@@ -45,7 +49,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (normalizedParentPhone === normalizedTeacherPhone) {
+    if (
+      !isConsumer &&
+      normalizedParentPhone === normalizedTeacherPhone
+    ) {
       return NextResponse.json(
         { error: "Teacher and parent phone numbers must be different." },
         { status: 400 },
@@ -60,13 +67,20 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient();
 
+    if (isConsumer && user.is_anonymous) {
+      return NextResponse.json(
+        { error: "Create an Individual account before inviting someone." },
+        { status: 403 },
+      );
+    }
+
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("school_id")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profile) {
+    if (!isConsumer && (profileError || !profile)) {
       return NextResponse.json(
         { error: "Your teacher profile is not ready." },
         { status: 403 },
@@ -76,9 +90,14 @@ export async function POST(request: Request) {
     const { data, error: conversationError } = await supabase
       .from("conversations")
       .insert({
-        teacher_id: user.id,
-        school_id: profile.school_id,
-        parent_phone_last_four: normalizedParentPhone.slice(-4),
+        teacher_id: isConsumer ? null : user.id,
+        school_id: isConsumer ? null : profile?.school_id,
+        host_user_id: isConsumer ? user.id : null,
+        conversation_type: isConsumer ? "consumer" : "school",
+        parent_phone_last_four:
+          !isConsumer && normalizedParentPhone
+            ? normalizedParentPhone.slice(-4)
+            : null,
       })
       .select("id, public_token")
       .single<ConversationRecord>();
@@ -91,6 +110,20 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
       new URL(request.url).origin;
     const conversationUrl = `${siteUrl}/c/${data.public_token}`;
+
+    if (isConsumer) {
+      await supabase
+        .from("conversations")
+        .update({ invitation_status: "manual" })
+        .eq("id", data.id);
+
+      return NextResponse.json({
+        conversationId: data.id,
+        conversationUrl,
+        publicToken: data.public_token,
+        smsSent: false,
+      });
+    }
 
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -113,7 +146,7 @@ export async function POST(request: Request) {
           .services(proxyServiceSid)
           .sessions(session.sid)
           .participants.create({
-            identifier: normalizedTeacherPhone,
+            identifier: normalizedTeacherPhone!,
             friendlyName: "Teacher",
           });
 
@@ -121,13 +154,13 @@ export async function POST(request: Request) {
           .services(proxyServiceSid)
           .sessions(session.sid)
           .participants.create({
-            identifier: normalizedParentPhone,
+            identifier: normalizedParentPhone!,
             friendlyName: "Parent",
           });
 
         await client.messages.create({
           from: teacherParticipant.proxyIdentifier,
-          to: normalizedParentPhone,
+          to: normalizedParentPhone!,
           body: `Your school invited you to an Isfaham Somali-English conversation. Open this private link: ${conversationUrl}\n\nThe link expires in 60 minutes.`,
         });
 

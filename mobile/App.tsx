@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Session } from "@supabase/supabase-js";
 import {
   RecordingPresets,
@@ -36,7 +37,11 @@ import {
 } from "./src/lib/api";
 import { supabase } from "./src/lib/supabase";
 import { CreditsScreen } from "./src/screens/CreditsScreen";
+import { ConsumerRemote } from "./src/screens/ConsumerRemote";
 import { StaffRemote } from "./src/screens/StaffRemote";
+import { WelcomeFlow } from "./src/screens/WelcomeFlow";
+
+const ONBOARDING_COMPLETE_KEY = "isfaham:onboarding-complete";
 
 const LANGUAGES: Record<
   LanguageCode,
@@ -125,8 +130,12 @@ function ConversationCard({
 
 function AppContent() {
   const [showStaffRemote, setShowStaffRemote] = useState(false);
+  const [showConsumerRemote, setShowConsumerRemote] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [pendingRemoteInvite, setPendingRemoteInvite] = useState(false);
   const [source, setSource] = useState<LanguageCode>("so");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
   const [transcriptExpanded, setTranscriptExpanded] = useState(true);
@@ -139,21 +148,54 @@ function AppContent() {
     Array.from({ length: 7 }, () => new Animated.Value(0.35)),
   );
   const target: LanguageCode = source === "so" ? "en" : "so";
+  const isAnonymous = Boolean(session?.user.is_anonymous);
 
   useEffect(() => {
     if (!supabase) return;
+    const authClient = supabase;
     let active = true;
 
     async function loadSession() {
-      if (!supabase) return;
-      const { data } = await supabase.auth.getSession();
-      if (active) setSession(data.session);
+      const { data } = await authClient.auth.getSession();
+      let nextSession = data.session;
+      if (!nextSession) {
+        const { data: anonymous, error } =
+          await authClient.auth.signInAnonymously();
+        if (!error) nextSession = anonymous.session;
+      }
+      const onboardingComplete = await AsyncStorage.getItem(
+        ONBOARDING_COMPLETE_KEY,
+      );
+      if (active) {
+        setSession(nextSession);
+        setShowOnboarding(
+          Boolean(nextSession?.user.is_anonymous) && !onboardingComplete,
+        );
+        setAuthReady(true);
+      }
     }
 
     void loadSession();
-    const { data: listener } = supabase.auth.onAuthStateChange((_, next) => {
+    const { data: listener } = authClient.auth.onAuthStateChange((_, next) => {
       if (!active) return;
       setSession(next);
+      if (next && !next.user.is_anonymous) {
+        setShowOnboarding(false);
+      } else if (!next) {
+        void authClient.auth.signInAnonymously().then(async ({ data, error }) => {
+          if (!active || error) return;
+          setSession(data.session);
+          const onboardingComplete = await AsyncStorage.getItem(
+            ONBOARDING_COMPLETE_KEY,
+          );
+          if (active) {
+            setShowOnboarding(
+              Boolean(data.session?.user.is_anonymous) &&
+                !onboardingComplete,
+            );
+          }
+        });
+      }
     });
     return () => {
       active = false;
@@ -161,8 +203,32 @@ function AppContent() {
     };
   }, []);
 
+  const completeOnboarding = useCallback(async () => {
+    await AsyncStorage.setItem(ONBOARDING_COMPLETE_KEY, "true");
+    setShowOnboarding(false);
+  }, []);
+
+  useEffect(() => {
+    if (!pendingRemoteInvite || !session || session.user.is_anonymous) return;
+    const openRemote = setTimeout(() => {
+      setPendingRemoteInvite(false);
+      void completeOnboarding();
+      setShowConsumerRemote(true);
+    }, 0);
+    return () => clearTimeout(openRemote);
+  }, [completeOnboarding, pendingRemoteInvite, session]);
+
+  const openConsumerRemote = useCallback(() => {
+    if (!session || session.user.is_anonymous) {
+      setPendingRemoteInvite(true);
+      setShowCredits(true);
+      return;
+    }
+    setShowConsumerRemote(true);
+  }, [session]);
+
   const statusText = useMemo(() => {
-    if (!session) return "Create a free account to translate";
+    if (!session) return "Preparing your free trial…";
     if (isTranslating) return "Translating your conversation…";
     if (recorderState.isRecording) {
       return `Tap to stop • ${formatDuration(recorderState.durationMillis)}`;
@@ -178,9 +244,9 @@ function AppContent() {
 
   const liveStatus = !session
     ? {
-        title: "Explore Isfaham",
-        detail: "Try a sample or create a free Individual account",
-        icon: "sparkles" as const,
+        title: "Preparing Isfaham",
+        detail: "Setting up your free translation trial",
+        icon: "sync" as const,
       }
     : isTranslating
     ? {
@@ -292,22 +358,6 @@ function AppContent() {
     }
   }, [isTranslating, recorder, session]);
 
-  const showSampleTranslation = useCallback(() => {
-    const sample: ConversationTurn = {
-      id: `demo-${Date.now()}`,
-      createdAt: new Date(),
-      originalText: "Sidee tahay?",
-      translatedText: "How are you?",
-      audioBase64: "",
-      audioMimeType: "audio/mpeg",
-      source: "so",
-      target: "en",
-      isDemo: true,
-    };
-    setTurns([sample]);
-    setTranscriptExpanded(true);
-  }, []);
-
   const stopAndTranslate = useCallback(async () => {
     if (!recorderState.isRecording) return;
 
@@ -348,10 +398,20 @@ function AppContent() {
       const message =
         error instanceof Error ? error.message : "Please try that again.";
       if (message.includes("Translation Credits")) {
-        Alert.alert("Translation balance empty", message, [
+        const anonymous = Boolean(session?.user.is_anonymous);
+        Alert.alert(
+          anonymous ? "Free trial complete" : "Translation balance empty",
+          anonymous
+            ? "Create your free Individual account to continue translating."
+            : message,
+          [
           { text: "Not now", style: "cancel" },
-          { text: "Add credits", onPress: () => setShowCredits(true) },
-        ]);
+            {
+              text: anonymous ? "Create account" : "Add credits",
+              onPress: () => setShowCredits(true),
+            },
+          ],
+        );
       } else {
         Alert.alert("Translation unavailable", message);
       }
@@ -407,6 +467,39 @@ function AppContent() {
     );
   }
 
+  if (showConsumerRemote && session && !session.user.is_anonymous) {
+    return (
+      <ConsumerRemote
+        onClose={() => setShowConsumerRemote(false)}
+        onCredits={() => {
+          setShowConsumerRemote(false);
+          setShowCredits(true);
+        }}
+        session={session}
+      />
+    );
+  }
+
+  if (!authReady) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingScreen}>
+          <ActivityIndicator color="#5B38D2" size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <WelcomeFlow
+        onCreateAccount={() => setShowCredits(true)}
+        onInviteSomeone={openConsumerRemote}
+        onStartConversation={() => void completeOnboarding()}
+      />
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <StatusBar style="dark" />
@@ -419,6 +512,16 @@ function AppContent() {
           </View>
         </View>
         <View style={styles.headerActions}>
+          <Pressable
+            accessibilityLabel="Invite someone to a remote conversation"
+            onPress={openConsumerRemote}
+            style={({ pressed }) => [
+              styles.headerButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Ionicons color="#5B38D2" name="link-outline" size={20} />
+          </Pressable>
           <Pressable
             accessibilityLabel="Translation credits"
             onPress={() => setShowCredits(true)}
@@ -623,9 +726,11 @@ function AppContent() {
           </Text>
           <Text style={styles.micHint}>
             {!session
-              ? "Includes 2 free translation minutes"
+              ? "Preparing 2 free translation minutes"
               : recorderState.isRecording
               ? "Tap the stop button when finished"
+              : isAnonymous
+                ? "2 free minutes • No account required"
               : "Tap to start • Tap again to translate"}
           </Text>
         </View>
@@ -675,42 +780,15 @@ function AppContent() {
                   turn={turn}
                 />
               ))}
-            {!session && turns.some((turn) => turn.isDemo) && (
-              <Pressable
-                onPress={() => setShowCredits(true)}
-                style={styles.demoUpgrade}
-              >
-                <Text style={styles.demoUpgradeTitle}>
-                  Ready to try your own words?
-                </Text>
-                <Text style={styles.demoUpgradeText}>
-                  Create a free Individual account and receive 2 translation
-                  minutes.
-                </Text>
-              </Pressable>
-            )}
           </>
         ) : (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>
-              {session ? "Start a conversation" : "See how Isfaham works"}
+              {isAnonymous ? "Your free trial is ready" : "Start a conversation"}
             </Text>
             <Text style={styles.emptyDescription}>
-              {session
-                ? "Tap the microphone, speak, then tap again to translate."
-                : "Try a sample without creating an account."}
+              Tap the microphone, speak, then tap again to translate.
             </Text>
-            {!session && (
-              <Pressable
-                onPress={showSampleTranslation}
-                style={styles.demoButton}
-              >
-                <Ionicons color="#5B38D2" name="sparkles" size={17} />
-                <Text style={styles.demoButtonText}>
-                  Try sample translation
-                </Text>
-              </Pressable>
-            )}
             <View style={styles.privacyNote}>
               <Ionicons name="shield-checkmark" color="#168261" size={17} />
               <Text style={styles.privacyText}>
@@ -736,6 +814,11 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#FAF9FD",
     flex: 1,
+  },
+  loadingScreen: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
   header: {
     alignItems: "center",

@@ -19,13 +19,14 @@ export async function POST(request: Request, context: RouteContext) {
     const admin = createAdminClient();
     const { data: conversation } = await admin
       .from("conversations")
-      .select("id, expires_at")
+      .select("id, status, expires_at")
       .eq("public_token", token)
       .maybeSingle();
 
     if (
       !conversation ||
-      new Date(conversation.expires_at).getTime() + 3_600_000 <= Date.now()
+      conversation.status !== "active" ||
+      new Date(conversation.expires_at).getTime() <= Date.now()
     ) {
       return NextResponse.json(
         { error: "This conversation is no longer available." },

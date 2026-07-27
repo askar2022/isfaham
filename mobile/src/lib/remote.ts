@@ -16,6 +16,7 @@ export type RemoteMessage = {
 export type RemoteRoom = {
   id: string;
   status: "waiting" | "active" | "ended";
+  conversationType: "school" | "consumer";
   expiresAt: string;
   schoolName: string;
   role: "teacher" | "parent";
@@ -68,6 +69,21 @@ export async function createRemoteConversation(
     publicToken: string;
     smsSent: boolean;
     warning?: string;
+  }>(response);
+}
+
+export async function createConsumerRemoteConversation(accessToken: string) {
+  const response = await fetch(`${requireApiUrl()}/api/conversations`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(accessToken),
+    },
+    body: JSON.stringify({ conversationType: "consumer" }),
+  });
+  return responseBody<{
+    conversationUrl: string;
+    publicToken: string;
   }>(response);
 }
 

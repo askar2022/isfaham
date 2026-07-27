@@ -35,6 +35,9 @@ function estimateCostMicrousd(
 
 export async function POST(request: Request, context: RouteContext) {
   let conversationId: string | null = null;
+  let reservedHostId: string | null = null;
+  let creditReservationId: string | null = null;
+  let creditSettled = false;
 
   try {
     const { token } = await context.params;
@@ -63,7 +66,9 @@ export async function POST(request: Request, context: RouteContext) {
     const admin = createAdminClient();
     const { data: conversation } = await admin
       .from("conversations")
-      .select("id, teacher_id, status, expires_at")
+      .select(
+        "id, teacher_id, host_user_id, conversation_type, status, expires_at",
+      )
       .eq("public_token", token)
       .maybeSingle();
 
@@ -97,8 +102,32 @@ export async function POST(request: Request, context: RouteContext) {
       );
     }
 
+    if (conversation.conversation_type === "consumer") {
+      if (!conversation.host_user_id) {
+        throw new Error("The conversation host is unavailable.");
+      }
+      creditReservationId = crypto.randomUUID();
+      const { data: reserved, error: reserveError } = await admin.rpc(
+        "reserve_translation_credit",
+        {
+          account_user_id: conversation.host_user_id,
+          reserved_seconds: 60,
+          reservation_id: creditReservationId,
+        },
+      );
+      if (reserveError) throw reserveError;
+      if (!reserved) {
+        return NextResponse.json(
+          { error: "The host needs more Translation Credits to continue." },
+          { status: 402 },
+        );
+      }
+      reservedHostId = conversation.host_user_id;
+    }
+
     const userId = (await getRequestUser(request))?.id ?? null;
-    const speaker = userId === conversation.teacher_id ? "teacher" : "parent";
+    const hostId = conversation.host_user_id ?? conversation.teacher_id;
+    const speaker = userId === hostId ? "teacher" : "parent";
     const source = speaker === "teacher" ? "en" : "so";
     const target = source === "en" ? "so" : "en";
     const result = await translateAudio(audio, source, target);
@@ -141,6 +170,28 @@ export async function POST(request: Request, context: RouteContext) {
       console.error("Conversation usage metric failed:", metricError);
     }
 
+    if (reservedHostId && creditReservationId) {
+      const usedSeconds = Math.min(
+        60,
+        Math.max(1, Math.ceil(measuredDurationMs / 1000)),
+      );
+      const refundSeconds = 60 - usedSeconds;
+      if (refundSeconds > 0) {
+        const { error: refundError } = await admin.rpc(
+          "refund_translation_credit",
+          {
+            account_user_id: reservedHostId,
+            refunded_seconds: refundSeconds,
+            reservation_id: creditReservationId,
+          },
+        );
+        if (refundError) {
+          console.error("Remote translation credit refund failed:", refundError);
+        }
+      }
+      creditSettled = true;
+    }
+
     return NextResponse.json({
       ...result,
       id: message.id,
@@ -149,6 +200,17 @@ export async function POST(request: Request, context: RouteContext) {
     });
   } catch (error) {
     console.error("Shared conversation translation failed:", error);
+    if (reservedHostId && creditReservationId && !creditSettled) {
+      try {
+        await createAdminClient().rpc("refund_translation_credit", {
+          account_user_id: reservedHostId,
+          refunded_seconds: 60,
+          reservation_id: creditReservationId,
+        });
+      } catch (refundError) {
+        console.error("Failed remote translation credit refund:", refundError);
+      }
+    }
     if (conversationId) {
       try {
         await createAdminClient().rpc("record_translation_failure", {

@@ -283,7 +283,7 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
     );
   }
 
-  if (!session) {
+  if (!session || session.user.is_anonymous) {
     return (
       <SafeAreaView style={styles.page}>
         <Header onBack={onClose} title="Staff sign in" />
