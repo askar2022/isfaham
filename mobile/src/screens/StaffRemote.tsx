@@ -315,33 +315,54 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
   if (!session || session.user.is_anonymous || !isStaff) {
     return (
       <SafeAreaView style={styles.page}>
-        <Header onBack={onClose} title="Staff sign in" />
+        <Header onBack={onClose} title="School Sign In" />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.centered}
+          style={styles.signInCentered}
         >
           <View style={styles.card}>
             <View style={styles.lockIcon}>
               <Ionicons color="#5B38D2" name="school" size={27} />
             </View>
             <Text style={styles.title}>
-              {codeSent ? "Check your email" : "School staff access"}
+              {codeSent
+                ? "Check Your Email"
+                : "Sign In With Your School Account"}
             </Text>
             <Text style={styles.description}>
               {codeSent
                 ? `Enter the six-digit code sent to ${email}.`
                 : session && !session.user.is_anonymous
-                  ? "You are signed in as an Individual. Enter an approved school email to switch to the School Staff workspace."
-                  : "Use your approved school email to invite a parent."}
+                  ? "Use your approved school email to switch from Personal and access your school's translation tools."
+                  : "Use your approved school email to access your school's translation tools and communicate with students and families."}
             </Text>
+            {!codeSent && (
+              <View style={styles.staffBenefits}>
+                {[
+                  "Secure school access",
+                  "Invite parents and families",
+                  "Real-time translation",
+                ].map((benefit) => (
+                  <View key={benefit} style={styles.staffBenefit}>
+                    <Ionicons
+                      color="#198462"
+                      name="checkmark-circle"
+                      size={17}
+                    />
+                    <Text style={styles.staffBenefitText}>{benefit}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
             <TextInput
               autoCapitalize="none"
               autoComplete="email"
               editable={!codeSent}
               keyboardType="email-address"
               onChangeText={setEmail}
-              placeholder="School email"
+              placeholder="Enter your school email"
               style={styles.input}
+              textContentType="emailAddress"
               value={email}
             />
             {codeSent && (
@@ -354,12 +375,13 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
                 }
                 placeholder="000000"
                 style={[styles.input, styles.codeInput]}
+                textContentType="oneTimeCode"
                 value={code}
               />
             )}
             <PrimaryButton
               disabled={busy || (codeSent ? code.length !== 6 : !email)}
-              label={codeSent ? "Verify and sign in" : "Send Code"}
+              label={codeSent ? "Verify and sign in" : "Continue"}
               loading={busy}
               onPress={() => void (codeSent ? verifyCode() : sendCode())}
             />
@@ -373,6 +395,14 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
               >
                 <Text style={styles.textButton}>Use a different email</Text>
               </Pressable>
+            )}
+            {!codeSent && (
+              <View style={styles.staffTrust}>
+                <Ionicons color="#6E6577" name="lock-closed" size={13} />
+                <Text style={styles.staffTrustText}>
+                  Only approved school emails can access school features
+                </Text>
+              </View>
             )}
             {!!error && <Text style={styles.error}>{error}</Text>}
           </View>
@@ -638,6 +668,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 22,
   },
+  signInCentered: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    paddingBottom: 110,
+    paddingHorizontal: 22,
+    paddingTop: 22,
+  },
   centeredContent: {
     alignItems: "center",
     flex: 1,
@@ -702,6 +740,20 @@ const styles = StyleSheet.create({
     marginTop: 7,
     textAlign: "center",
   },
+  staffBenefits: {
+    gap: 9,
+    marginBottom: 18,
+  },
+  staffBenefit: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  staffBenefitText: {
+    color: "#554C5C",
+    fontSize: 12,
+    fontWeight: "700",
+  },
   descriptionLeft: {
     color: "#766E7F",
     fontSize: 14,
@@ -748,6 +800,18 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginTop: 13,
     textAlign: "center",
+  },
+  staffTrust: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    justifyContent: "center",
+    marginTop: 13,
+  },
+  staffTrustText: {
+    color: "#746C7B",
+    fontSize: 9,
+    fontWeight: "600",
   },
   formPage: { padding: 24 },
   eyebrow: {

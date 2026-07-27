@@ -203,23 +203,49 @@ function AccountScreen({
           <Ionicons color="#5B38D2" name="person" size={32} />
         </View>
         <Text style={styles.accountPageTitle}>
-          {anonymous ? "Guest trial" : "Your account"}
+          {anonymous ? "Continue as a Guest" : "Your Account"}
         </Text>
         <Text style={styles.accountPageDescription}>
           {anonymous
-            ? "Create a free Individual account to keep your balance, invite another phone, and buy more translation time."
+            ? "Enjoy your free trial today. Create a free account when you’re ready to:"
             : session.user.email ?? "Signed in to Isfaham"}
         </Text>
+        {anonymous && (
+          <View style={styles.accountPageBenefits}>
+            {[
+              "Save your translation minutes",
+              "Use Isfaham on all your devices",
+              "Purchase more translation time anytime",
+            ].map((benefit) => (
+              <View key={benefit} style={styles.accountPageBenefit}>
+                <Ionicons
+                  color="#198462"
+                  name="checkmark-circle"
+                  size={18}
+                />
+                <Text style={styles.accountPageBenefitText}>{benefit}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         {anonymous ? (
           <Pressable onPress={onCreateAccount} style={styles.accountPageButton}>
             <Text style={styles.accountPageButtonText}>
-              Create Free Account
+              Create My Free Account
             </Text>
           </Pressable>
         ) : (
           <Pressable onPress={onSignOut} style={styles.accountPageSecondary}>
             <Text style={styles.accountPageSecondaryText}>Sign out</Text>
           </Pressable>
+        )}
+        {anonymous && (
+          <View style={styles.accountPageTrust}>
+            <Ionicons color="#6E6577" name="lock-closed" size={13} />
+            <Text style={styles.accountPageTrustText}>
+              Free to create • No subscription required
+            </Text>
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -637,16 +663,14 @@ function AppContent() {
           <BrandMark />
           <View>
             <Text style={styles.logoText}>Isfaham</Text>
-            <Text style={styles.logoTagline}>
-              Helping people understand each other.
-            </Text>
+            <Text style={styles.logoTagline}>Real-Time Voice Translation</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.controls}>
         <Text style={styles.languageSectionLabel}>
-          Choose the language you’re speaking
+          Choose Your Language
         </Text>
         <View style={styles.languageRow}>
           <Pressable
@@ -835,14 +859,20 @@ function AppContent() {
               </Pressable>
               {(!session || isAnonymous) && (
                 <View style={styles.trustRow}>
-                  {["No sign-up", "2 free minutes", "Private"].map((label) => (
+                  {[
+                    "No Sign-up Required",
+                    "2 Free Minutes",
+                    "Private by Default",
+                  ].map((label) => (
                     <View key={label} style={styles.trustItem}>
                       <Ionicons
                         color="#198462"
                         name="checkmark-circle"
                         size={12}
                       />
-                      <Text style={styles.trustItemText}>{label}</Text>
+                      <Text numberOfLines={1} style={styles.trustItemText}>
+                        {label}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -1013,8 +1043,8 @@ const styles = StyleSheet.create({
   accountPageContent: {
     alignItems: "center",
     flex: 1,
-    justifyContent: "center",
     padding: 24,
+    paddingTop: 165,
   },
   accountPageIcon: {
     alignItems: "center",
@@ -1038,6 +1068,22 @@ const styles = StyleSheet.create({
     maxWidth: 340,
     textAlign: "center",
   },
+  accountPageBenefits: {
+    alignSelf: "stretch",
+    gap: 10,
+    marginTop: 20,
+    maxWidth: 360,
+  },
+  accountPageBenefit: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 9,
+  },
+  accountPageBenefitText: {
+    color: "#554C5C",
+    fontSize: 12,
+    fontWeight: "700",
+  },
   accountPageButton: {
     alignItems: "center",
     alignSelf: "stretch",
@@ -1059,6 +1105,17 @@ const styles = StyleSheet.create({
     color: "#B62956",
     fontSize: 13,
     fontWeight: "900",
+  },
+  accountPageTrust: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    marginTop: 13,
+  },
+  accountPageTrustText: {
+    color: "#746C7B",
+    fontSize: 9,
+    fontWeight: "600",
   },
   loadingScreen: {
     alignItems: "center",
@@ -1092,9 +1149,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   logoTagline: {
-    color: "#817A8D",
-    fontSize: 10,
-    marginTop: -1,
+    color: "#5F5668",
+    fontSize: 11,
+    fontWeight: "700",
+    marginTop: 0,
   },
   headerButton: {
     alignItems: "center",
@@ -1689,7 +1747,7 @@ const styles = StyleSheet.create({
   trustRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 10,
+    gap: 14,
     justifyContent: "center",
     marginTop: 7,
   },

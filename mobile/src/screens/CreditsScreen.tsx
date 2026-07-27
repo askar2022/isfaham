@@ -371,7 +371,7 @@ function IndividualSignIn({
         <Pressable onPress={onClose} style={styles.headerButton}>
           <Ionicons color="#50465C" name="chevron-back" size={24} />
         </Pressable>
-        <Text style={styles.headerTitle}>Individual Account</Text>
+        <Text style={styles.headerTitle}>Personal Account</Text>
         <View style={styles.headerButton} />
       </View>
       <KeyboardAvoidingView
@@ -383,23 +383,42 @@ function IndividualSignIn({
             <Ionicons color="#5B38D2" name="person" size={27} />
           </View>
           <Text style={styles.accountTitle}>
-            {codeSent ? "Check your email" : "Create your free account"}
+            {codeSent
+              ? "Check Your Email"
+              : "Create Your Free Isfaham Account"}
           </Text>
           <Text style={styles.accountDescription}>
             {codeSent
               ? `Enter the six-digit code sent to ${email}.`
-              : session?.user.is_anonymous
-                ? "Keep your remaining trial balance, host remote conversations, and purchase more translation time."
-                : "Save your balance across devices and receive 2 free translation minutes."}
+              : "Save your translation minutes, access your account from any device, and continue translating anytime."}
           </Text>
+          {!codeSent && (
+            <View style={styles.accountBenefits}>
+              {[
+                "Save your translation minutes",
+                "Access your account on any device",
+                "Invite another phone",
+              ].map((benefit) => (
+                <View key={benefit} style={styles.accountBenefit}>
+                  <Ionicons
+                    color="#198462"
+                    name="checkmark-circle"
+                    size={17}
+                  />
+                  <Text style={styles.accountBenefitText}>{benefit}</Text>
+                </View>
+              ))}
+            </View>
+          )}
           <TextInput
             autoCapitalize="none"
             autoComplete="email"
             editable={!codeSent}
             keyboardType="email-address"
             onChangeText={setEmail}
-            placeholder="Email address"
+            placeholder="Enter your email"
             style={styles.input}
+            textContentType="emailAddress"
             value={email}
           />
           {codeSent && (
@@ -412,6 +431,7 @@ function IndividualSignIn({
               }
               placeholder="000000"
               style={[styles.input, styles.codeInput]}
+              textContentType="oneTimeCode"
               value={code}
             />
           )}
@@ -428,7 +448,7 @@ function IndividualSignIn({
               <ActivityIndicator color="white" />
             ) : (
               <Text style={styles.accountButtonText}>
-                {codeSent ? "Verify and continue" : "Send Code"}
+                {codeSent ? "Verify and continue" : "Continue"}
               </Text>
             )}
           </Pressable>
@@ -442,6 +462,14 @@ function IndividualSignIn({
             >
               <Text style={styles.changeEmail}>Use a different email</Text>
             </Pressable>
+          )}
+          {!codeSent && (
+            <View style={styles.accountTrust}>
+              <Ionicons color="#6E6577" name="lock-closed" size={13} />
+              <Text style={styles.accountTrustText}>
+                Secure sign-in with a one-time verification code
+              </Text>
+            </View>
           )}
           {!!error && <Text style={styles.error}>{error}</Text>}
         </View>
@@ -473,7 +501,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    padding: 22,
+    paddingBottom: 110,
+    paddingHorizontal: 22,
+    paddingTop: 22,
   },
   content: { padding: 20, paddingBottom: 44 },
   balanceCard: {
@@ -605,9 +635,24 @@ const styles = StyleSheet.create({
     color: "#766B80",
     fontSize: 13,
     lineHeight: 20,
-    marginBottom: 20,
+    marginBottom: 16,
     marginTop: 8,
     textAlign: "center",
+  },
+  accountBenefits: {
+    alignSelf: "stretch",
+    gap: 9,
+    marginBottom: 18,
+  },
+  accountBenefit: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  accountBenefitText: {
+    color: "#554C5C",
+    fontSize: 12,
+    fontWeight: "700",
   },
   input: {
     backgroundColor: "#FBFAFC",
@@ -637,6 +682,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     fontWeight: "900",
+  },
+  accountTrust: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    justifyContent: "center",
+    marginTop: 13,
+  },
+  accountTrustText: {
+    color: "#746C7B",
+    fontSize: 9,
+    fontWeight: "600",
   },
   disabled: { opacity: 0.45 },
   changeEmail: {
