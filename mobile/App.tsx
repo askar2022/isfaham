@@ -62,6 +62,8 @@ function BrandMark() {
   return (
     <Image
       accessibilityLabel="Isfaham logo"
+      alt="Isfaham logo"
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       source={require("./assets/isfaham-icon.png")}
       style={styles.brandMark}
     />
@@ -129,10 +131,105 @@ function ConversationCard({
   );
 }
 
+type AppTab = "translate" | "individual" | "school" | "account";
+
+function BottomNavigation({
+  active,
+  onSelect,
+}: {
+  active: AppTab;
+  onSelect: (tab: AppTab) => void;
+}) {
+  const tabs: Array<{
+    id: AppTab;
+    icon: "language" | "person" | "school" | "settings";
+    label: string;
+  }> = [
+    { id: "translate", icon: "language", label: "Translate" },
+    { id: "individual", icon: "person", label: "Individual" },
+    { id: "school", icon: "school", label: "School" },
+    { id: "account", icon: "settings", label: "Account" },
+  ];
+
+  return (
+    <SafeAreaView edges={["bottom"]} style={styles.bottomSafeArea}>
+      <View style={styles.bottomNavigation}>
+        {tabs.map((tab) => {
+          const selected = active === tab.id;
+          return (
+            <Pressable
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              key={tab.id}
+              onPress={() => onSelect(tab.id)}
+              style={styles.bottomTab}
+            >
+              <Ionicons
+                color={selected ? "#5B38D2" : "#8A8291"}
+                name={selected ? tab.icon : `${tab.icon}-outline`}
+                size={21}
+              />
+              <Text
+                style={[
+                  styles.bottomTabLabel,
+                  selected && styles.bottomTabLabelActive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function AccountScreen({
+  onCreateAccount,
+  onSignOut,
+  session,
+}: {
+  onCreateAccount: () => void;
+  onSignOut: () => void;
+  session: Session | null;
+}) {
+  const anonymous = !session || session.user.is_anonymous;
+  return (
+    <SafeAreaView style={styles.accountPage} edges={["top", "left", "right"]}>
+      <View style={styles.accountPageContent}>
+        <View style={styles.accountPageIcon}>
+          <Ionicons color="#5B38D2" name="person" size={32} />
+        </View>
+        <Text style={styles.accountPageTitle}>
+          {anonymous ? "Guest trial" : "Your account"}
+        </Text>
+        <Text style={styles.accountPageDescription}>
+          {anonymous
+            ? "Create a free Individual account to keep your balance, invite another phone, and buy more translation time."
+            : session.user.email ?? "Signed in to Isfaham"}
+        </Text>
+        {anonymous ? (
+          <Pressable onPress={onCreateAccount} style={styles.accountPageButton}>
+            <Text style={styles.accountPageButtonText}>
+              Create Free Account
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={onSignOut} style={styles.accountPageSecondary}>
+            <Text style={styles.accountPageSecondaryText}>Sign out</Text>
+          </Pressable>
+        )}
+      </View>
+    </SafeAreaView>
+  );
+}
+
 function AppContent() {
   const [showStaffRemote, setShowStaffRemote] = useState(false);
   const [showConsumerRemote, setShowConsumerRemote] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -228,8 +325,14 @@ function AppContent() {
     setShowConsumerRemote(true);
   }, [session]);
 
+  const selectTab = useCallback((tab: AppTab) => {
+    setShowCredits(tab === "individual");
+    setShowStaffRemote(tab === "school");
+    setShowAccount(tab === "account");
+  }, []);
+
   const statusText = useMemo(() => {
-    if (!session) return "Preparing your free trial…";
+    if (!session) return "Tap to start your free trial";
     if (isTranslating) return "Translating your conversation…";
     if (recorderState.isRecording) {
       return `Tap to stop • ${formatDuration(recorderState.durationMillis)}`;
@@ -243,13 +346,7 @@ function AppContent() {
     source,
   ]);
 
-  const liveStatus = !session
-    ? {
-        title: "Preparing Isfaham",
-        detail: "Setting up your free translation trial",
-        icon: "sync" as const,
-      }
-    : isTranslating
+  const liveStatus = isTranslating
     ? {
         title: "Translating…",
         detail: `Preparing ${LANGUAGES[target].name}`,
@@ -330,8 +427,19 @@ function AppContent() {
   const startRecording = useCallback(async () => {
     if (isTranslating) return;
     if (!session) {
-      setShowCredits(true);
-      return;
+      if (!supabase) {
+        Alert.alert("Free trial unavailable", "Please try again shortly.");
+        return;
+      }
+      const { data, error } = await supabase.auth.signInAnonymously();
+      if (error || !data.session) {
+        Alert.alert(
+          "Free trial unavailable",
+          error?.message ?? "Please check your connection and try again.",
+        );
+        return;
+      }
+      setSession(data.session);
     }
 
     try {
@@ -439,32 +547,28 @@ function AppContent() {
     Haptics.selectionAsync();
   }, [isTranslating, recorderState.isRecording]);
 
-  const clearConversation = useCallback(() => {
-    if (!turns.length) return;
-    Alert.alert(
-      "Clear conversation?",
-      "This removes every translation from this screen.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: () => setTurns([]),
-        },
-      ],
-    );
-  }, [turns.length]);
-
   if (showStaffRemote) {
-    return <StaffRemote onClose={() => setShowStaffRemote(false)} />;
+    return (
+      <View style={styles.tabScreen}>
+        <StaffRemote onClose={() => selectTab("translate")} />
+        <BottomNavigation active="school" onSelect={selectTab} />
+      </View>
+    );
   }
 
   if (showCredits) {
     return (
-      <CreditsScreen
-        onClose={() => setShowCredits(false)}
-        session={session}
-      />
+      <View style={styles.tabScreen}>
+        <CreditsScreen
+          onClose={() => selectTab("translate")}
+          onRemote={() => {
+            setShowCredits(false);
+            openConsumerRemote();
+          }}
+          session={session}
+        />
+        <BottomNavigation active="individual" onSelect={selectTab} />
+      </View>
     );
   }
 
@@ -478,6 +582,25 @@ function AppContent() {
         }}
         session={session}
       />
+    );
+  }
+
+  if (showAccount) {
+    return (
+      <View style={styles.tabScreen}>
+        <AccountScreen
+          onCreateAccount={() => {
+            setShowAccount(false);
+            setShowCredits(true);
+          }}
+          onSignOut={() => {
+            void supabase?.auth.signOut();
+            selectTab("translate");
+          }}
+          session={session}
+        />
+        <BottomNavigation active="account" onSelect={selectTab} />
+      </View>
     );
   }
 
@@ -511,50 +634,6 @@ function AppContent() {
             <Text style={styles.logoText}>Isfaham</Text>
             <Text style={styles.logoTagline}>Live Translation</Text>
           </View>
-        </View>
-        <View style={styles.headerActions}>
-          <Pressable
-            accessibilityLabel="Invite someone to a remote conversation"
-            onPress={openConsumerRemote}
-            style={({ pressed }) => [
-              styles.headerButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Ionicons color="#5B38D2" name="link-outline" size={20} />
-          </Pressable>
-          <Pressable
-            accessibilityLabel="Translation credits"
-            onPress={() => setShowCredits(true)}
-            style={({ pressed }) => [
-              styles.headerButton,
-              styles.creditButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Ionicons color="#5B38D2" name="wallet-outline" size={19} />
-          </Pressable>
-          <Pressable
-            accessibilityLabel="Staff sign in and remote conversations"
-            onPress={() => setShowStaffRemote(true)}
-            style={({ pressed }) => [
-              styles.staffButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Ionicons color="#5B38D2" name="school-outline" size={16} />
-            <Text style={styles.staffButtonText}>Staff</Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel="Clear conversation"
-            onPress={clearConversation}
-            style={({ pressed }) => [
-              styles.headerButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <Ionicons name="refresh-outline" color="#4F4960" size={21} />
-          </Pressable>
         </View>
       </View>
 
@@ -644,38 +723,43 @@ function AppContent() {
           </Pressable>
         </View>
 
-        <View
-          style={[
-            styles.statusPanel,
-            turns.length > 0 && styles.statusPanelCompact,
-            recorderState.isRecording && styles.statusPanelListening,
-          ]}
-        >
-          {recorderState.isRecording ? (
-            <View style={styles.waveform}>
-              {waveform.map((value, index) => (
-                <Animated.View
-                  key={index}
-                  style={[
-                    styles.waveformBar,
-                    {
-                      height: 13 + (index % 4) * 5,
-                      transform: [{ scaleY: value }],
-                    },
-                  ]}
-                />
-              ))}
+        {(recorderState.isRecording ||
+          isTranslating ||
+          playerStatus.playing ||
+          turns.length > 0) && (
+          <View
+            style={[
+              styles.statusPanel,
+              turns.length > 0 && styles.statusPanelCompact,
+              recorderState.isRecording && styles.statusPanelListening,
+            ]}
+          >
+            {recorderState.isRecording ? (
+              <View style={styles.waveform}>
+                {waveform.map((value, index) => (
+                  <Animated.View
+                    key={index}
+                    style={[
+                      styles.waveformBar,
+                      {
+                        height: 13 + (index % 4) * 5,
+                        transform: [{ scaleY: value }],
+                      },
+                    ]}
+                  />
+                ))}
+              </View>
+            ) : (
+              <View style={styles.statusIcon}>
+                <Ionicons color="#5B38D2" name={liveStatus.icon} size={22} />
+              </View>
+            )}
+            <View style={styles.statusCopy}>
+              <Text style={styles.statusTitle}>{liveStatus.title}</Text>
+              <Text style={styles.statusDetail}>{liveStatus.detail}</Text>
             </View>
-          ) : (
-            <View style={styles.statusIcon}>
-              <Ionicons color="#5B38D2" name={liveStatus.icon} size={22} />
-            </View>
-          )}
-          <View style={styles.statusCopy}>
-            <Text style={styles.statusTitle}>{liveStatus.title}</Text>
-            <Text style={styles.statusDetail}>{liveStatus.detail}</Text>
           </View>
-        </View>
+        )}
 
         <View style={styles.micArea}>
           <Pressable
@@ -727,7 +811,7 @@ function AppContent() {
           </Text>
           <Text style={styles.micHint}>
             {!session
-              ? "Preparing 2 free translation minutes"
+              ? "2 free minutes • No account required"
               : recorderState.isRecording
               ? "Tap the stop button when finished"
               : isAnonymous
@@ -799,6 +883,7 @@ function AppContent() {
           </View>
         )}
       </ScrollView>
+      <BottomNavigation active="translate" onSelect={selectTab} />
     </SafeAreaView>
   );
 }
@@ -815,6 +900,91 @@ const styles = StyleSheet.create({
   safeArea: {
     backgroundColor: "#FAF9FD",
     flex: 1,
+  },
+  tabScreen: {
+    backgroundColor: "#FAF9FD",
+    flex: 1,
+  },
+  bottomSafeArea: {
+    backgroundColor: "#FFFFFF",
+    borderTopColor: "#E8E3EC",
+    borderTopWidth: 1,
+  },
+  bottomNavigation: {
+    alignItems: "center",
+    flexDirection: "row",
+    minHeight: 61,
+    paddingHorizontal: 6,
+  },
+  bottomTab: {
+    alignItems: "center",
+    flex: 1,
+    gap: 3,
+    justifyContent: "center",
+    paddingVertical: 8,
+  },
+  bottomTabLabel: {
+    color: "#8A8291",
+    fontSize: 9,
+    fontWeight: "700",
+  },
+  bottomTabLabelActive: {
+    color: "#5B38D2",
+    fontWeight: "900",
+  },
+  accountPage: {
+    backgroundColor: "#FAF9FD",
+    flex: 1,
+  },
+  accountPageContent: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+  },
+  accountPageIcon: {
+    alignItems: "center",
+    backgroundColor: "#F0EBFF",
+    borderRadius: 30,
+    height: 60,
+    justifyContent: "center",
+    marginBottom: 16,
+    width: 60,
+  },
+  accountPageTitle: {
+    color: "#281F32",
+    fontSize: 27,
+    fontWeight: "900",
+  },
+  accountPageDescription: {
+    color: "#756B7D",
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 9,
+    maxWidth: 340,
+    textAlign: "center",
+  },
+  accountPageButton: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: "#5B38D2",
+    borderRadius: 14,
+    marginTop: 24,
+    paddingVertical: 16,
+  },
+  accountPageButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  accountPageSecondary: {
+    marginTop: 24,
+    padding: 12,
+  },
+  accountPageSecondaryText: {
+    color: "#B62956",
+    fontSize: 13,
+    fontWeight: "900",
   },
   loadingScreen: {
     alignItems: "center",
@@ -1221,15 +1391,15 @@ const styles = StyleSheet.create({
   },
   micButton: {
     alignItems: "center",
-    borderRadius: 52,
+    borderRadius: 58,
     elevation: 8,
-    height: 104,
+    height: 116,
     justifyContent: "center",
     shadowColor: "#5B38D2",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
-    width: 104,
+    width: 116,
   },
   micButtonRecording: {
     shadowColor: "#D43866",

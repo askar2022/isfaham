@@ -46,22 +46,28 @@ function formatBalance(seconds: number) {
 
 export function CreditsScreen({
   onClose,
+  onRemote,
   session,
 }: {
   onClose: () => void;
+  onRemote: () => void;
   session: Session | null;
 }) {
   if (!session || session.user.is_anonymous) {
     return <IndividualSignIn onClose={onClose} session={session} />;
   }
-  return <CreditWallet onClose={onClose} session={session} />;
+  return (
+    <CreditWallet onClose={onClose} onRemote={onRemote} session={session} />
+  );
 }
 
 function CreditWallet({
   onClose,
+  onRemote,
   session,
 }: {
   onClose: () => void;
+  onRemote: () => void;
   session: Session;
 }) {
   const [balance, setBalance] = useState<CreditBalance | null>(null);
@@ -204,6 +210,21 @@ function CreditWallet({
               Credits count only processed speech—not idle time.
             </Text>
           </View>
+
+          {!balance?.schoolFunded && (
+            <Pressable onPress={onRemote} style={styles.remoteCard}>
+              <View style={styles.remoteIcon}>
+                <Ionicons color="#5B38D2" name="link" size={22} />
+              </View>
+              <View style={styles.remoteCopy}>
+                <Text style={styles.remoteTitle}>Invite another phone</Text>
+                <Text style={styles.remoteDescription}>
+                  Your guest joins free. Translation time uses your balance.
+                </Text>
+              </View>
+              <Ionicons color="#8A7D96" name="chevron-forward" size={20} />
+            </Pressable>
+          )}
 
           {!balance?.schoolFunded && (
             <>
@@ -489,6 +510,32 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 7,
     textAlign: "center",
+  },
+  remoteCard: {
+    alignItems: "center",
+    backgroundColor: "white",
+    borderColor: "#E3DEE8",
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: "row",
+    marginTop: 14,
+    padding: 15,
+  },
+  remoteIcon: {
+    alignItems: "center",
+    backgroundColor: "#F0EBFF",
+    borderRadius: 13,
+    height: 44,
+    justifyContent: "center",
+    width: 44,
+  },
+  remoteCopy: { flex: 1, marginHorizontal: 12 },
+  remoteTitle: { color: "#2A2330", fontSize: 14, fontWeight: "900" },
+  remoteDescription: {
+    color: "#837B89",
+    fontSize: 10,
+    lineHeight: 15,
+    marginTop: 3,
   },
   sectionTitle: {
     color: "#28202F",
