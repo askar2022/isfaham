@@ -24,6 +24,8 @@ export function WelcomeFlow({
           <>
             <Image
               accessibilityLabel="Isfaham logo"
+              alt="Isfaham logo"
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
               source={require("../../assets/isfaham-icon.png")}
               style={styles.brandIcon}
             />

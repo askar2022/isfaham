@@ -382,8 +382,10 @@ export default function Home() {
         </a>
         <p>Understand each other.</p>
         <div>
-          <a href="mailto:hello@isfaham.org">Contact</a>
-          <a href="#about">About</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/support">Support</a>
+          <a href="/contact">Contact</a>
           <span>© 2026 Isfaham</span>
         </div>
       </footer>
