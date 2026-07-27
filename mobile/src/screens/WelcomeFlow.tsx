@@ -91,7 +91,8 @@ export function WelcomeFlow({
               <View style={styles.optionCopy}>
                 <Text style={styles.optionTitle}>Invite Another Phone</Text>
                 <Text style={styles.optionDescription}>
-                  Send a link or code so someone can join remotely.
+                  Send a link or QR code so someone can join remotely. A free
+                  host account is required.
                 </Text>
               </View>
               <Ionicons color="#8A7D96" name="chevron-forward" size={21} />
