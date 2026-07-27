@@ -120,7 +120,9 @@ export default function PrivacyPage() {
         <p>
           Depending on your location, you may request access, correction,
           deletion, or a copy of your personal information. You may also ask us
-          to close your account. Send requests from your account email to{" "}
+          to close your account directly in the app. See our{" "}
+          <a href="/delete-account">account-deletion instructions</a>, or send
+          a request from your account email to{" "}
           <a href="mailto:support@isfaham.org">support@isfaham.org</a>. We may
           need to verify your identity before completing a request.
         </p>

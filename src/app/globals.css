@@ -94,7 +94,8 @@
   margin: 0 0 14px;
 }
 
-.policy-content ul {
+.policy-content ul,
+.policy-content ol {
   margin: 12px 0 18px;
   padding-left: 22px;
 }

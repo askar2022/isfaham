@@ -31,6 +31,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      path: "/delete-account",
+      changeFrequency: "yearly",
+      priority: 0.5,
+    },
   ];
 
   return pages.map((page) => ({

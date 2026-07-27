@@ -32,11 +32,13 @@ import {
   SafeAreaView,
 } from "react-native-safe-area-context";
 
+import { deleteAccount } from "./src/lib/account";
 import {
   LanguageCode,
   TranslationResult,
   translateRecording,
 } from "./src/lib/api";
+import { logOutApplePurchases } from "./src/lib/iap";
 import { supabase } from "./src/lib/supabase";
 import { CreditsScreen } from "./src/screens/CreditsScreen";
 import { ConsumerRemote } from "./src/screens/ConsumerRemote";
@@ -188,14 +190,44 @@ function BottomNavigation({
 
 function AccountScreen({
   onCreateAccount,
+  onDeleteAccount,
   onSignOut,
   session,
 }: {
   onCreateAccount: () => void;
+  onDeleteAccount: () => Promise<void>;
   onSignOut: () => void;
   session: Session | null;
 }) {
   const anonymous = !session || session.user.is_anonymous;
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDeletion = () => {
+    Alert.alert(
+      "Delete your account?",
+      "This permanently deletes your Isfaham account, remaining translation balance, and associated account data. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete Account",
+          style: "destructive",
+          onPress: () => {
+            setDeleting(true);
+            void onDeleteAccount()
+              .catch((error) => {
+                Alert.alert(
+                  "Account not deleted",
+                  error instanceof Error
+                    ? error.message
+                    : "Please try again or contact support@isfaham.org.",
+                );
+              })
+              .finally(() => setDeleting(false));
+          },
+        },
+      ],
+    );
+  };
   return (
     <SafeAreaView style={styles.accountPage} edges={["top", "left", "right"]}>
       <View style={styles.accountPageContent}>
@@ -236,9 +268,29 @@ function AccountScreen({
             </Text>
           </Pressable>
         ) : (
-          <Pressable onPress={onSignOut} style={styles.accountPageSecondary}>
-            <Text style={styles.accountPageSecondaryText}>Sign out</Text>
-          </Pressable>
+          <>
+            <Pressable onPress={onSignOut} style={styles.accountPageSecondary}>
+              <Text style={styles.accountPageSecondaryText}>Sign out</Text>
+            </Pressable>
+            <View style={styles.deleteAccountSection}>
+              <Text style={styles.deleteAccountDescription}>
+                Permanently remove your Isfaham account and associated data.
+              </Text>
+              <Pressable
+                disabled={deleting}
+                onPress={confirmDeletion}
+                style={styles.deleteAccountButton}
+              >
+                {deleting ? (
+                  <ActivityIndicator color="#B62956" size="small" />
+                ) : (
+                  <Text style={styles.deleteAccountButtonText}>
+                    Delete Account
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </>
         )}
         {anonymous && (
           <View style={styles.accountPageTrust}>
@@ -625,9 +677,20 @@ function AppContent() {
             setShowAccount(false);
             setShowCredits(true);
           }}
-          onSignOut={() => {
-            void supabase?.auth.signOut();
+          onDeleteAccount={async () => {
+            if (!session || session.user.is_anonymous) {
+              throw new Error("Sign in before deleting an account.");
+            }
+            await deleteAccount(session.access_token);
+            await logOutApplePurchases().catch(() => undefined);
+            await supabase?.auth.signOut({ scope: "local" });
             selectTab("translate");
+          }}
+          onSignOut={() => {
+            void logOutApplePurchases()
+              .catch(() => undefined)
+              .then(() => supabase?.auth.signOut({ scope: "local" }))
+              .finally(() => selectTab("translate"));
           }}
           session={session}
         />
@@ -1110,6 +1173,36 @@ const styles = StyleSheet.create({
   accountPageSecondaryText: {
     color: "#B62956",
     fontSize: 13,
+    fontWeight: "900",
+  },
+  deleteAccountSection: {
+    alignItems: "center",
+    borderTopColor: "#E7E1EA",
+    borderTopWidth: 1,
+    marginTop: 20,
+    paddingTop: 20,
+    width: "100%",
+  },
+  deleteAccountDescription: {
+    color: "#817884",
+    fontSize: 10,
+    lineHeight: 15,
+    maxWidth: 300,
+    textAlign: "center",
+  },
+  deleteAccountButton: {
+    alignItems: "center",
+    borderColor: "#D8A4B3",
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 11,
+    minHeight: 44,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  deleteAccountButtonText: {
+    color: "#B62956",
+    fontSize: 12,
     fontWeight: "900",
   },
   accountPageTrust: {

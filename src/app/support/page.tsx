@@ -47,7 +47,7 @@ const questions = [
   {
     title: "How do I request account deletion?",
     answer:
-      "Email support@isfaham.org from the address connected to your account. We may ask you to verify ownership before deleting account data.",
+      "Sign in, open the Account tab, and choose Delete Account. If you cannot access the app, follow the instructions at isfaham.org/delete-account.",
   },
 ];
 
@@ -87,7 +87,8 @@ export default function SupportPage() {
         <h2>Policies</h2>
         <p>
           Review our <a href="/privacy">Privacy Policy</a> and{" "}
-          <a href="/terms">Terms and Conditions</a>.
+          <a href="/terms">Terms and Conditions</a>. You can also review our{" "}
+          <a href="/delete-account">account-deletion instructions</a>.
         </p>
       </section>
     </PolicyPage>
