@@ -337,7 +337,7 @@ function AppContent() {
     if (recorderState.isRecording) {
       return `Tap to stop • ${formatDuration(recorderState.durationMillis)}`;
     }
-    return "Real-Time Voice Translation";
+    return "Translate Conversations Instantly";
   }, [
     isTranslating,
     recorderState.durationMillis,
@@ -795,7 +795,7 @@ function AppContent() {
                 <Ionicons
                   name={recorderState.isRecording ? "stop" : "mic"}
                   color="white"
-                  size={44}
+                  size={54}
                 />
               )}
             </LinearGradient>
@@ -824,13 +824,13 @@ function AppContent() {
               >
                 <Text style={styles.startButtonText}>
                   {!session || isAnonymous
-                    ? "Start Free Trial"
+                    ? "Try It Free"
                     : "Start Translating"}
                 </Text>
               </Pressable>
               {(!session || isAnonymous) && (
                 <Text style={styles.trialNote}>
-                  2 free minutes • No account required
+                  No sign-up required • 2 free minutes
                 </Text>
               )}
             </>
@@ -860,26 +860,23 @@ function AppContent() {
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Translate conversations instantly</Text>
-            <Text style={styles.emptyDescription}>
-              For families, schools, healthcare, businesses, and everyday
-              communication.
-            </Text>
             <View style={styles.howItWorks}>
               <Text style={styles.howItWorksTitle}>How it works</Text>
-              {[
-                ["1", "Tap the microphone"],
-                ["2", "Speak naturally"],
-                ["3", "Hear the translation"],
-              ].map(([step, label]) => (
-                <View key={step} style={styles.howItWorksStep}>
-                  <View style={styles.stepNumber}>
-                    <Text style={styles.stepNumberText}>{step}</Text>
+              <View style={styles.howItWorksSteps}>
+                {["Tap", "Speak", "Translate"].map((label, index) => (
+                  <View key={label} style={styles.howItWorksStep}>
+                    <View style={styles.stepNumber}>
+                      <Text style={styles.stepNumberText}>{index + 1}</Text>
+                    </View>
+                    <Text style={styles.stepLabel}>{label}</Text>
                   </View>
-                  <Text style={styles.stepLabel}>{label}</Text>
-                </View>
-              ))}
+                ))}
+              </View>
             </View>
+            <Text style={styles.emptyDescription}>
+              Perfect for schools, healthcare, businesses, families, and
+              travel.
+            </Text>
             <View style={styles.privacyNote}>
               <Ionicons name="lock-closed" color="#168261" size={15} />
               <Text style={styles.privacyText}>Private by default</Text>
@@ -1390,7 +1387,7 @@ const styles = StyleSheet.create({
     color: "#746D7D",
     fontSize: 14,
     lineHeight: 21,
-    marginTop: 10,
+    marginTop: 16,
     maxWidth: 340,
     textAlign: "center",
   },
@@ -1400,20 +1397,25 @@ const styles = StyleSheet.create({
     borderColor: "#E8E3EC",
     borderRadius: 16,
     borderWidth: 1,
-    gap: 10,
-    marginTop: 20,
+    gap: 13,
     padding: 15,
   },
   howItWorksTitle: {
     color: "#2A2330",
     fontSize: 14,
     fontWeight: "900",
-    marginBottom: 2,
+    textAlign: "center",
+  },
+  howItWorksSteps: {
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
   howItWorksStep: {
     alignItems: "center",
+    flex: 1,
     flexDirection: "row",
-    gap: 10,
+    gap: 6,
+    justifyContent: "center",
   },
   stepNumber: {
     alignItems: "center",
@@ -1619,15 +1621,15 @@ const styles = StyleSheet.create({
   },
   micButton: {
     alignItems: "center",
-    borderRadius: 58,
+    borderRadius: 70,
     elevation: 8,
-    height: 116,
+    height: 140,
     justifyContent: "center",
     shadowColor: "#5B38D2",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
-    width: 116,
+    width: 140,
   },
   micButtonRecording: {
     shadowColor: "#D43866",
@@ -1638,7 +1640,7 @@ const styles = StyleSheet.create({
   },
   micStatus: {
     color: "#312A39",
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "800",
     marginTop: 10,
   },
