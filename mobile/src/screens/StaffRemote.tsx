@@ -35,11 +35,13 @@ import {
   translateRemoteTurn,
   updateRemoteRoom,
 } from "../lib/remote";
+import { getCreditBalance } from "../lib/credits";
 import { supabase } from "../lib/supabase";
 
 export function StaffRemote({ onClose }: { onClose: () => void }) {
   const [checkingSession, setCheckingSession] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -62,13 +64,40 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
 
     void supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
-      setCheckingSession(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_, next) => {
       setSession(next);
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const checkAccount = setTimeout(() => {
+      if (!session || session.user.is_anonymous) {
+        if (active) {
+          setIsStaff(false);
+          setCheckingSession(false);
+        }
+        return;
+      }
+
+      void getCreditBalance(session.access_token)
+        .then((balance) => {
+          if (active) setIsStaff(balance.schoolFunded);
+        })
+        .catch(() => {
+          if (active) setIsStaff(false);
+        })
+        .finally(() => {
+          if (active) setCheckingSession(false);
+        });
+    }, 0);
+    return () => {
+      active = false;
+      clearTimeout(checkAccount);
+    };
+  }, [session]);
 
   const playAudio = useCallback(
     async (audioBase64: string, id: string) => {
@@ -283,7 +312,7 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
     );
   }
 
-  if (!session || session.user.is_anonymous) {
+  if (!session || session.user.is_anonymous || !isStaff) {
     return (
       <SafeAreaView style={styles.page}>
         <Header onBack={onClose} title="Staff sign in" />
@@ -301,7 +330,9 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
             <Text style={styles.description}>
               {codeSent
                 ? `Enter the six-digit code sent to ${email}.`
-                : "Use your approved school email to invite a parent."}
+                : session && !session.user.is_anonymous
+                  ? "You are signed in as an Individual. Enter an approved school email to switch to the School Staff workspace."
+                  : "Use your approved school email to invite a parent."}
             </Text>
             <TextInput
               autoCapitalize="none"
