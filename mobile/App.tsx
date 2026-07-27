@@ -19,6 +19,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -59,11 +60,11 @@ type ConversationTurn = TranslationResult & {
 
 function BrandMark() {
   return (
-    <View style={styles.brandMark}>
-      {[8, 16, 23, 16, 8].map((height, index) => (
-        <View key={index} style={[styles.brandWave, { height }]} />
-      ))}
-    </View>
+    <Image
+      accessibilityLabel="Isfaham logo"
+      source={require("./assets/isfaham-icon.png")}
+      style={styles.brandMark}
+    />
   );
 }
 
@@ -836,22 +837,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   brandMark: {
-    alignItems: "center",
-    backgroundColor: "#5B38D2",
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 12,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    flexDirection: "row",
-    gap: 2,
+    borderRadius: 11,
     height: 38,
-    justifyContent: "center",
-    width: 42,
-  },
-  brandWave: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 2,
-    width: 2,
+    width: 38,
   },
   logoText: {
     color: "#241444",

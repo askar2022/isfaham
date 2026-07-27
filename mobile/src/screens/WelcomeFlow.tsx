@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Step = "welcome" | "choice" | "one-phone";
@@ -22,9 +22,11 @@ export function WelcomeFlow({
       <View style={styles.content}>
         {step === "welcome" && (
           <>
-            <View style={styles.brandIcon}>
-              <Ionicons color="white" name="pulse" size={34} />
-            </View>
+            <Image
+              accessibilityLabel="Isfaham logo"
+              source={require("../../assets/isfaham-icon.png")}
+              style={styles.brandIcon}
+            />
             <Text style={styles.brand}>Isfaham</Text>
             <Text style={styles.tagline}>
               Live Somali ⇄ English translation.
@@ -147,11 +149,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   brandIcon: {
-    alignItems: "center",
-    backgroundColor: "#5B38D2",
     borderRadius: 18,
     height: 64,
-    justifyContent: "center",
     marginBottom: 16,
     width: 64,
   },

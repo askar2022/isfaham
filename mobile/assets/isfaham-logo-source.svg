@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 600">
+  <defs>
+    <linearGradient id="brand" x1="80" y1="60" x2="500" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#805DF0"/>
+      <stop offset="1" stop-color="#4320AD"/>
+    </linearGradient>
+  </defs>
+  <path
+    d="M118 105h370c55 0 100 45 100 100v190c0 55-45 100-100 100H323L181 577l31-82h-94c-55 0-100-45-100-100V205c0-55 45-100 100-100Z"
+    fill="url(#brand)"
+  />
+  <g fill="#fff">
+    <rect x="154" y="268" width="25" height="72" rx="12.5"/>
+    <rect x="218" y="222" width="25" height="164" rx="12.5"/>
+    <rect x="291" y="180" width="25" height="248" rx="12.5"/>
+    <rect x="364" y="222" width="25" height="164" rx="12.5"/>
+    <rect x="428" y="268" width="25" height="72" rx="12.5"/>
+  </g>
+  <text x="665" y="300" fill="#251D2D" font-family="Arial, Helvetica, sans-serif" font-size="170" font-weight="800">Isfaham</text>
+  <text x="675" y="400" fill="#746A7C" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="600">Live Translation</text>
+</svg>
