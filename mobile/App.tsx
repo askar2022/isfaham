@@ -637,12 +637,17 @@ function AppContent() {
           <BrandMark />
           <View>
             <Text style={styles.logoText}>Isfaham</Text>
-            <Text style={styles.logoTagline}>Breaking language barriers.</Text>
+            <Text style={styles.logoTagline}>
+              Helping people understand each other.
+            </Text>
           </View>
         </View>
       </View>
 
       <View style={styles.controls}>
+        <Text style={styles.languageSectionLabel}>
+          Choose the language you’re speaking
+        </Text>
         <View style={styles.languageRow}>
           <Pressable
             onPress={() => !recorderState.isRecording && setSource("so")}
@@ -795,7 +800,7 @@ function AppContent() {
                 <Ionicons
                   name={recorderState.isRecording ? "stop" : "mic"}
                   color="white"
-                  size={54}
+                  size={58}
                 />
               )}
             </LinearGradient>
@@ -829,9 +834,18 @@ function AppContent() {
                 </Text>
               </Pressable>
               {(!session || isAnonymous) && (
-                <Text style={styles.trialNote}>
-                  No sign-up required • 2 free minutes
-                </Text>
+                <View style={styles.trustRow}>
+                  {["No sign-up", "2 free minutes", "Private"].map((label) => (
+                    <View key={label} style={styles.trustItem}>
+                      <Ionicons
+                        color="#198462"
+                        name="checkmark-circle"
+                        size={12}
+                      />
+                      <Text style={styles.trustItemText}>{label}</Text>
+                    </View>
+                  ))}
+                </View>
               )}
             </>
           )}
@@ -874,13 +888,9 @@ function AppContent() {
               </View>
             </View>
             <Text style={styles.emptyDescription}>
-              Perfect for schools, healthcare, businesses, families, and
-              travel.
+              Perfect for schools, healthcare, business, travel, and everyday
+              conversations.
             </Text>
-            <View style={styles.privacyNote}>
-              <Ionicons name="lock-closed" color="#168261" size={15} />
-              <Text style={styles.privacyText}>Private by default</Text>
-            </View>
           </View>
         )}
       </ScrollView>
@@ -1495,6 +1505,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 17,
     paddingTop: 14,
   },
+  languageSectionLabel: {
+    color: "#6F6677",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+    marginBottom: 7,
+    textTransform: "uppercase",
+  },
   languageRow: {
     alignItems: "center",
     flexDirection: "row",
@@ -1515,9 +1533,11 @@ const styles = StyleSheet.create({
   languageCardActive: {
     backgroundColor: "#F1EDFF",
     borderColor: "#8A6CE5",
+    borderWidth: 2,
+    elevation: 2,
     shadowColor: "#6A48D7",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.18,
     shadowRadius: 7,
   },
   languageCode: {
@@ -1621,15 +1641,15 @@ const styles = StyleSheet.create({
   },
   micButton: {
     alignItems: "center",
-    borderRadius: 70,
+    borderRadius: 77,
     elevation: 8,
-    height: 140,
+    height: 154,
     justifyContent: "center",
     shadowColor: "#5B38D2",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 14,
-    width: 140,
+    width: 154,
   },
   micButtonRecording: {
     shadowColor: "#D43866",
@@ -1666,10 +1686,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
   },
-  trialNote: {
-    color: "#8B8491",
-    fontSize: 9,
-    marginTop: 5,
+  trustRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "center",
+    marginTop: 7,
+  },
+  trustItem: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 3,
+  },
+  trustItemText: {
+    color: "#6D6674",
+    fontSize: 8,
+    fontWeight: "700",
   },
   buttonPressed: {
     opacity: 0.72,
