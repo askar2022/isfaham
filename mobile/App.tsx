@@ -20,6 +20,7 @@ import {
   Alert,
   Animated,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -146,8 +147,8 @@ function BottomNavigation({
     label: string;
   }> = [
     { id: "translate", icon: "language", label: "Translate" },
-    { id: "individual", icon: "person", label: "Individual" },
-    { id: "school", icon: "school", label: "School" },
+    { id: "individual", icon: "person", label: "Personal" },
+    { id: "school", icon: "school", label: "Schools" },
     { id: "account", icon: "settings", label: "Account" },
   ];
 
@@ -236,7 +237,7 @@ function AppContent() {
   const [pendingRemoteInvite, setPendingRemoteInvite] = useState(false);
   const [source, setSource] = useState<LanguageCode>("so");
   const [turns, setTurns] = useState<ConversationTurn[]>([]);
-  const [transcriptExpanded, setTranscriptExpanded] = useState(true);
+  const [showTranscript, setShowTranscript] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
@@ -332,18 +333,15 @@ function AppContent() {
   }, []);
 
   const statusText = useMemo(() => {
-    if (!session) return "Tap to start your free trial";
     if (isTranslating) return "Translating your conversation…";
     if (recorderState.isRecording) {
       return `Tap to stop • ${formatDuration(recorderState.durationMillis)}`;
     }
-    return `Tap to speak ${LANGUAGES[source].name}`;
+    return "Real-Time Voice Translation";
   }, [
     isTranslating,
     recorderState.durationMillis,
     recorderState.isRecording,
-    session,
-    source,
   ]);
 
   const liveStatus = isTranslating
@@ -497,7 +495,6 @@ function AppContent() {
       };
 
       setTurns((current) => [...current, turn]);
-      setTranscriptExpanded(true);
       setSource(target);
       playTranslation(turn);
       await Haptics.notificationAsync(
@@ -540,6 +537,14 @@ function AppContent() {
     target,
     session,
   ]);
+
+  const handleMicPress = useCallback(() => {
+    if (recorderState.isRecording) {
+      void stopAndTranslate();
+    } else {
+      void startRecording();
+    }
+  }, [recorderState.isRecording, startRecording, stopAndTranslate]);
 
   const switchSpeaker = useCallback(() => {
     if (recorderState.isRecording || isTranslating) return;
@@ -632,7 +637,7 @@ function AppContent() {
           <BrandMark />
           <View>
             <Text style={styles.logoText}>Isfaham</Text>
-            <Text style={styles.logoTagline}>Live Translation</Text>
+            <Text style={styles.logoTagline}>Breaking language barriers.</Text>
           </View>
         </View>
       </View>
@@ -770,13 +775,7 @@ function AppContent() {
             }
             accessibilityLabel={`Speak ${LANGUAGES[source].name}`}
             disabled={isTranslating}
-            onPress={() => {
-              if (recorderState.isRecording) {
-                void stopAndTranslate();
-              } else {
-                void startRecording();
-              }
-            }}
+            onPress={handleMicPress}
           >
             <LinearGradient
               colors={
@@ -810,14 +809,32 @@ function AppContent() {
             {statusText}
           </Text>
           <Text style={styles.micHint}>
-            {!session
-              ? "2 free minutes • No account required"
-              : recorderState.isRecording
+            {recorderState.isRecording
               ? "Tap the stop button when finished"
-              : isAnonymous
-                ? "2 free minutes • No account required"
-              : "Tap to start • Tap again to translate"}
+              : "Speak naturally. Hear the translation instantly."}
           </Text>
+          {!recorderState.isRecording && !isTranslating && (
+            <>
+              <Pressable
+                onPress={handleMicPress}
+                style={({ pressed }) => [
+                  styles.startButton,
+                  pressed && styles.buttonPressed,
+                ]}
+              >
+                <Text style={styles.startButtonText}>
+                  {!session || isAnonymous
+                    ? "Start Free Trial"
+                    : "Start Translating"}
+                </Text>
+              </Pressable>
+              {(!session || isAnonymous) && (
+                <Text style={styles.trialNote}>
+                  2 free minutes • No account required
+                </Text>
+              )}
+            </>
+          )}
         </View>
       </View>
 
@@ -829,60 +846,110 @@ function AppContent() {
         showsVerticalScrollIndicator={false}
       >
         {turns.length ? (
-          <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded: transcriptExpanded }}
-              onPress={() => setTranscriptExpanded((current) => !current)}
-              style={({ pressed }) => [
-                styles.transcriptHeader,
-                pressed && styles.buttonPressed,
-              ]}
-            >
-              <View style={styles.transcriptHeading}>
-                <View style={styles.liveDot} />
-                <View>
-                  <Text style={styles.transcriptTitle}>
-                    Conversation transcript
-                  </Text>
-                  <Text style={styles.transcriptCount}>
-                    {turns.length}{" "}
-                    {turns.length === 1 ? "translation" : "translations"}
-                  </Text>
+          <View style={styles.activeConversation}>
+            <View style={styles.activeConversationIcon}>
+              <Ionicons color="#5B38D2" name="chatbubbles" size={25} />
+            </View>
+            <Text style={styles.activeConversationTitle}>
+              Conversation in progress
+            </Text>
+            <Text style={styles.activeConversationDescription}>
+              Keep taking turns. Open the floating transcript whenever you
+              want to read the translations.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Translate conversations instantly</Text>
+            <Text style={styles.emptyDescription}>
+              For families, schools, healthcare, businesses, and everyday
+              communication.
+            </Text>
+            <View style={styles.howItWorks}>
+              <Text style={styles.howItWorksTitle}>How it works</Text>
+              {[
+                ["1", "Tap the microphone"],
+                ["2", "Speak naturally"],
+                ["3", "Hear the translation"],
+              ].map(([step, label]) => (
+                <View key={step} style={styles.howItWorksStep}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{step}</Text>
+                  </View>
+                  <Text style={styles.stepLabel}>{label}</Text>
                 </View>
+              ))}
+            </View>
+            <View style={styles.privacyNote}>
+              <Ionicons name="lock-closed" color="#168261" size={15} />
+              <Text style={styles.privacyText}>Private by default</Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+      {turns.length > 0 && (
+        <Pressable
+          accessibilityLabel={`Open transcript with ${turns.length} translations`}
+          onPress={() => setShowTranscript(true)}
+          style={({ pressed }) => [
+            styles.transcriptFloatingButton,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Ionicons color="#FFFFFF" name="chatbox-ellipses" size={20} />
+          <Text style={styles.transcriptFloatingText}>Transcript</Text>
+          <View style={styles.transcriptFloatingCount}>
+            <Text style={styles.transcriptFloatingCountText}>{turns.length}</Text>
+          </View>
+        </Pressable>
+      )}
+      <Modal
+        animationType="slide"
+        onRequestClose={() => setShowTranscript(false)}
+        transparent
+        visible={showTranscript}
+      >
+        <View style={styles.transcriptModal}>
+          <Pressable
+            accessibilityLabel="Close transcript"
+            onPress={() => setShowTranscript(false)}
+            style={styles.transcriptBackdrop}
+          />
+          <SafeAreaView edges={["bottom"]} style={styles.transcriptSheet}>
+            <View style={styles.transcriptSheetHandle} />
+            <View style={styles.transcriptSheetHeader}>
+              <View>
+                <Text style={styles.transcriptSheetTitle}>
+                  Conversation transcript
+                </Text>
+                <Text style={styles.transcriptCount}>
+                  {turns.length}{" "}
+                  {turns.length === 1 ? "translation" : "translations"}
+                </Text>
               </View>
-              <Ionicons
-                color="#5B38D2"
-                name={transcriptExpanded ? "chevron-up" : "chevron-down"}
-                size={22}
-              />
-            </Pressable>
-            {transcriptExpanded &&
-              turns.map((turn) => (
+              <Pressable
+                accessibilityLabel="Close transcript"
+                onPress={() => setShowTranscript(false)}
+                style={styles.transcriptCloseButton}
+              >
+                <Ionicons color="#554C5C" name="close" size={22} />
+              </Pressable>
+            </View>
+            <ScrollView
+              contentContainerStyle={styles.transcriptSheetContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {turns.map((turn) => (
                 <ConversationCard
                   key={turn.id}
                   onPlay={playTranslation}
                   turn={turn}
                 />
               ))}
-          </>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>
-              {isAnonymous ? "Your free trial is ready" : "Start a conversation"}
-            </Text>
-            <Text style={styles.emptyDescription}>
-              Tap the microphone, speak, then tap again to translate.
-            </Text>
-            <View style={styles.privacyNote}>
-              <Ionicons name="shield-checkmark" color="#168261" size={17} />
-              <Text style={styles.privacyText}>
-                Audio is processed securely and not saved by default
-              </Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+            </ScrollView>
+          </SafeAreaView>
+        </View>
+      </Modal>
       <BottomNavigation active="translate" onSelect={selectTab} />
     </SafeAreaView>
   );
@@ -1060,7 +1127,7 @@ const styles = StyleSheet.create({
   },
   emptyScrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   transcriptHeader: {
     alignItems: "center",
@@ -1078,6 +1145,126 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
+  },
+  activeConversation: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 28,
+    paddingVertical: 42,
+  },
+  activeConversationIcon: {
+    alignItems: "center",
+    backgroundColor: "#EEE8FF",
+    borderRadius: 24,
+    height: 48,
+    justifyContent: "center",
+    marginBottom: 13,
+    width: 48,
+  },
+  activeConversationTitle: {
+    color: "#2A2330",
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  activeConversationDescription: {
+    color: "#7A7281",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 7,
+    maxWidth: 310,
+    textAlign: "center",
+  },
+  transcriptFloatingButton: {
+    alignItems: "center",
+    backgroundColor: "#5B38D2",
+    borderRadius: 22,
+    bottom: 80,
+    elevation: 8,
+    flexDirection: "row",
+    gap: 7,
+    paddingHorizontal: 15,
+    paddingVertical: 11,
+    position: "absolute",
+    right: 16,
+    shadowColor: "#39258A",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+  },
+  transcriptFloatingText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  transcriptFloatingCount: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    height: 20,
+    justifyContent: "center",
+    minWidth: 20,
+    paddingHorizontal: 5,
+  },
+  transcriptFloatingCountText: {
+    color: "#5B38D2",
+    fontSize: 9,
+    fontWeight: "900",
+  },
+  transcriptModal: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  transcriptBackdrop: {
+    backgroundColor: "rgba(28, 20, 35, 0.42)",
+    bottom: 0,
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
+  transcriptSheet: {
+    backgroundColor: "#FAF9FD",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "78%",
+    minHeight: 420,
+    overflow: "hidden",
+  },
+  transcriptSheetHandle: {
+    alignSelf: "center",
+    backgroundColor: "#D5CFDA",
+    borderRadius: 2,
+    height: 4,
+    marginTop: 9,
+    width: 42,
+  },
+  transcriptSheetHeader: {
+    alignItems: "center",
+    borderBottomColor: "#E7E2EB",
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  transcriptSheetTitle: {
+    color: "#2A2330",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  transcriptCloseButton: {
+    alignItems: "center",
+    backgroundColor: "#EEEAF1",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    width: 36,
+  },
+  transcriptSheetContent: {
+    gap: 4,
+    padding: 16,
+    paddingBottom: 28,
   },
   liveDot: {
     backgroundColor: "#2DA67B",
@@ -1190,12 +1377,14 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     paddingHorizontal: 15,
+    paddingTop: 18,
   },
   emptyTitle: {
     color: "#241E2D",
-    fontSize: 23,
-    fontWeight: "800",
+    fontSize: 21,
+    fontWeight: "900",
     letterSpacing: -0.6,
+    textAlign: "center",
   },
   emptyDescription: {
     color: "#746D7D",
@@ -1204,6 +1393,45 @@ const styles = StyleSheet.create({
     marginTop: 10,
     maxWidth: 340,
     textAlign: "center",
+  },
+  howItWorks: {
+    alignSelf: "stretch",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E8E3EC",
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+    marginTop: 20,
+    padding: 15,
+  },
+  howItWorksTitle: {
+    color: "#2A2330",
+    fontSize: 14,
+    fontWeight: "900",
+    marginBottom: 2,
+  },
+  howItWorksStep: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+  },
+  stepNumber: {
+    alignItems: "center",
+    backgroundColor: "#EEE8FF",
+    borderRadius: 11,
+    height: 22,
+    justifyContent: "center",
+    width: 22,
+  },
+  stepNumberText: {
+    color: "#5B38D2",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  stepLabel: {
+    color: "#514958",
+    fontSize: 12,
+    fontWeight: "700",
   },
   demoButton: {
     alignItems: "center",
@@ -1247,7 +1475,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flexDirection: "row",
     gap: 7,
-    marginTop: 23,
+    marginTop: 14,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
@@ -1419,8 +1647,27 @@ const styles = StyleSheet.create({
   },
   micHint: {
     color: "#918B98",
-    fontSize: 10,
-    marginTop: 3,
+    fontSize: 11,
+    marginTop: 4,
+  },
+  startButton: {
+    alignItems: "center",
+    backgroundColor: "#5B38D2",
+    borderRadius: 12,
+    marginTop: 13,
+    minWidth: 170,
+    paddingHorizontal: 22,
+    paddingVertical: 11,
+  },
+  startButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  trialNote: {
+    color: "#8B8491",
+    fontSize: 9,
+    marginTop: 5,
   },
   buttonPressed: {
     opacity: 0.72,
