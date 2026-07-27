@@ -327,21 +327,21 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
             <Text style={styles.title}>
               {codeSent
                 ? "Check Your Email"
-                : "Sign In With Your School Account"}
+                : "Access Your School Translation Tools"}
             </Text>
             <Text style={styles.description}>
               {codeSent
                 ? `Enter the six-digit code sent to ${email}.`
                 : session && !session.user.is_anonymous
-                  ? "Use your approved school email to switch from Personal and access your school's translation tools."
-                  : "Use your approved school email to access your school's translation tools and communicate with students and families."}
+                  ? "Sign in with your verified school email to switch from Personal to your school's secure translation tools."
+                  : "Sign in with your verified school email to access secure translation tools for your school."}
             </Text>
             {!codeSent && (
               <View style={styles.staffBenefits}>
                 {[
                   "Secure school access",
-                  "Invite parents and families",
-                  "Real-time translation",
+                  "Communicate with families",
+                  "Real-time voice translation",
                 ].map((benefit) => (
                   <View key={benefit} style={styles.staffBenefit}>
                     <Ionicons
@@ -360,7 +360,7 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
               editable={!codeSent}
               keyboardType="email-address"
               onChangeText={setEmail}
-              placeholder="Enter your school email"
+              placeholder="teacher@school.org"
               style={styles.input}
               textContentType="emailAddress"
               value={email}
@@ -400,7 +400,8 @@ export function StaffRemote({ onClose }: { onClose: () => void }) {
               <View style={styles.staffTrust}>
                 <Ionicons color="#6E6577" name="lock-closed" size={13} />
                 <Text style={styles.staffTrustText}>
-                  Only approved school emails can access school features
+                  Only verified school email addresses can access school
+                  features
                 </Text>
               </View>
             )}

@@ -199,15 +199,16 @@ function AccountScreen({
   return (
     <SafeAreaView style={styles.accountPage} edges={["top", "left", "right"]}>
       <View style={styles.accountPageContent}>
-        <View style={styles.accountPageIcon}>
-          <Ionicons color="#5B38D2" name="person" size={32} />
+        <View style={styles.accountPageBrand}>
+          <BrandMark />
+          <Text style={styles.accountPageBrandText}>Isfaham</Text>
         </View>
         <Text style={styles.accountPageTitle}>
           {anonymous ? "Continue as a Guest" : "Your Account"}
         </Text>
         <Text style={styles.accountPageDescription}>
           {anonymous
-            ? "Enjoy your free trial today. Create a free account when you’re ready to:"
+            ? "Enjoy your free trial. When you’re ready, create a free account to:"
             : session.user.email ?? "Signed in to Isfaham"}
         </Text>
         {anonymous && (
@@ -532,9 +533,9 @@ function AppContent() {
       if (message.includes("Translation Credits")) {
         const anonymous = Boolean(session?.user.is_anonymous);
         Alert.alert(
-          anonymous ? "Free trial complete" : "Translation balance empty",
+          anonymous ? "Your free trial has ended" : "Translation balance empty",
           anonymous
-            ? "Create your free Individual account to continue translating."
+            ? "Continue translating by creating your free Isfaham account."
             : message,
           [
           { text: "Not now", style: "cancel" },
@@ -670,10 +671,11 @@ function AppContent() {
 
       <View style={styles.controls}>
         <Text style={styles.languageSectionLabel}>
-          Choose Your Language
+          I’m Speaking
         </Text>
         <View style={styles.languageRow}>
           <Pressable
+            accessibilityLabel="Speak Somali"
             onPress={() => !recorderState.isRecording && setSource("so")}
             style={[
               styles.languageCard,
@@ -717,10 +719,11 @@ function AppContent() {
               pressed && styles.buttonPressed,
             ]}
           >
-            <Ionicons name="swap-horizontal" color="#5B38D2" size={21} />
+            <Ionicons name="swap-horizontal" color="#5B38D2" size={24} />
           </Pressable>
 
           <Pressable
+            accessibilityLabel="Speak English"
             onPress={() => !recorderState.isRecording && setSource("en")}
             style={[
               styles.languageCard,
@@ -1046,14 +1049,17 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 165,
   },
-  accountPageIcon: {
+  accountPageBrand: {
     alignItems: "center",
-    backgroundColor: "#F0EBFF",
-    borderRadius: 30,
-    height: 60,
-    justifyContent: "center",
+    flexDirection: "row",
+    gap: 9,
     marginBottom: 16,
-    width: 60,
+  },
+  accountPageBrandText: {
+    color: "#241A31",
+    fontSize: 22,
+    fontWeight: "900",
+    letterSpacing: -0.4,
   },
   accountPageTitle: {
     color: "#281F32",
@@ -1564,12 +1570,11 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   languageSectionLabel: {
-    color: "#6F6677",
-    fontSize: 9,
+    color: "#3B3343",
+    fontSize: 12,
     fontWeight: "900",
-    letterSpacing: 0.7,
-    marginBottom: 7,
-    textTransform: "uppercase",
+    marginBottom: 8,
+    textAlign: "center",
   },
   languageRow: {
     alignItems: "center",
@@ -1633,10 +1638,10 @@ const styles = StyleSheet.create({
   switchButton: {
     alignItems: "center",
     backgroundColor: "#F0ECFC",
-    borderRadius: 18,
-    height: 36,
+    borderRadius: 20,
+    height: 40,
     justifyContent: "center",
-    width: 36,
+    width: 40,
   },
   statusPanel: {
     alignItems: "center",
@@ -1695,7 +1700,7 @@ const styles = StyleSheet.create({
   },
   micArea: {
     alignItems: "center",
-    marginTop: 14,
+    marginTop: 9,
   },
   micButton: {
     alignItems: "center",

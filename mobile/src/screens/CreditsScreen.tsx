@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Session } from "@supabase/supabase-js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -315,6 +315,8 @@ function IndividualSignIn({
   const [codeSent, setCodeSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const emailInputRef = useRef<TextInput>(null);
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   async function sendCode() {
     if (!supabase) {
@@ -385,19 +387,20 @@ function IndividualSignIn({
           <Text style={styles.accountTitle}>
             {codeSent
               ? "Check Your Email"
-              : "Create Your Free Isfaham Account"}
+              : "Create Your Free Account"}
           </Text>
           <Text style={styles.accountDescription}>
             {codeSent
               ? `Enter the six-digit code sent to ${email}.`
-              : "Save your translation minutes, access your account from any device, and continue translating anytime."}
+              : "Create an account to save your translation minutes and continue translating on any device."}
           </Text>
           {!codeSent && (
             <View style={styles.accountBenefits}>
               {[
                 "Save your translation minutes",
-                "Access your account on any device",
-                "Invite another phone",
+                "Use Isfaham on all your devices",
+                "Buy more translation minutes anytime",
+                "Secure sign-in",
               ].map((benefit) => (
                 <View key={benefit} style={styles.accountBenefit}>
                   <Ionicons
@@ -416,7 +419,8 @@ function IndividualSignIn({
             editable={!codeSent}
             keyboardType="email-address"
             onChangeText={setEmail}
-            placeholder="Enter your email"
+            placeholder="name@example.com"
+            ref={emailInputRef}
             style={styles.input}
             textContentType="emailAddress"
             value={email}
@@ -436,12 +440,12 @@ function IndividualSignIn({
             />
           )}
           <Pressable
-            disabled={busy || (codeSent ? code.length !== 6 : !email)}
+            disabled={busy || (codeSent ? code.length !== 6 : !emailIsValid)}
             onPress={() => void (codeSent ? verifyCode() : sendCode())}
             style={[
               styles.accountButton,
-              (busy || (codeSent ? code.length !== 6 : !email)) &&
-                styles.disabled,
+              (busy || (codeSent ? code.length !== 6 : !emailIsValid)) &&
+                styles.accountButtonDisabled,
             ]}
           >
             {busy ? (
@@ -461,6 +465,17 @@ function IndividualSignIn({
               }}
             >
               <Text style={styles.changeEmail}>Use a different email</Text>
+            </Pressable>
+          )}
+          {!codeSent && (
+            <Pressable
+              onPress={() => emailInputRef.current?.focus()}
+              style={styles.existingAccount}
+            >
+              <Text style={styles.existingAccountText}>
+                Already have an account?{" "}
+                <Text style={styles.existingAccountLink}>Sign In</Text>
+              </Text>
             </Pressable>
           )}
           {!codeSent && (
@@ -635,7 +650,7 @@ const styles = StyleSheet.create({
     color: "#766B80",
     fontSize: 13,
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: 24,
     marginTop: 8,
     textAlign: "center",
   },
@@ -683,12 +698,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
   },
+  accountButtonDisabled: {
+    backgroundColor: "#CFCAD4",
+  },
+  existingAccount: {
+    alignItems: "center",
+    marginTop: 13,
+  },
+  existingAccountText: {
+    color: "#746C7B",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  existingAccountLink: {
+    color: "#5B38D2",
+    fontWeight: "900",
+  },
   accountTrust: {
     alignItems: "center",
     flexDirection: "row",
     gap: 5,
     justifyContent: "center",
-    marginTop: 13,
+    marginTop: 10,
   },
   accountTrustText: {
     color: "#746C7B",
