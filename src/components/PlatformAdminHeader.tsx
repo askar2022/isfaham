@@ -6,15 +6,21 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-const links = [
-  { href: "/admin", label: "School Staff" },
+const personalLinks = [
   { href: "/admin/personal", label: "Personal Users" },
   { href: "/admin/guests", label: "Guest Trials" },
 ];
 
-export function PlatformAdminHeader() {
+const schoolLinks = [{ href: "/admin", label: "School Staff" }];
+
+export function PlatformAdminHeader({
+  workspace = "personal",
+}: {
+  workspace?: "personal" | "school";
+}) {
   const pathname = usePathname();
   const router = useRouter();
+  const links = workspace === "school" ? schoolLinks : personalLinks;
 
   async function signOut() {
     await createBrowserSupabaseClient().auth.signOut();

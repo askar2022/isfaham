@@ -146,7 +146,7 @@ export function AdminTeacherPortal({
   return (
     <main className="admin-page">
       {isPlatformAdmin ? (
-        <PlatformAdminHeader />
+        <PlatformAdminHeader workspace="school" />
       ) : (
         <header className="admin-header">
           <Link href="/teacher">
