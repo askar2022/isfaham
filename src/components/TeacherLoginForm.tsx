@@ -36,6 +36,7 @@ export function TeacherLoginForm() {
   const [codeDigits, setCodeDigits] = useState(() => Array(6).fill(""));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [destination, setDestination] = useState("/teacher");
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const code = codeDigits.join("");
 
@@ -91,12 +92,16 @@ export function TeacherLoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const body = (await response.json()) as { error?: string };
+      const body = (await response.json()) as {
+        destination?: string;
+        error?: string;
+      };
 
       if (!response.ok) {
         throw new Error(body.error || "We could not send your code.");
       }
 
+      setDestination(body.destination ?? "/teacher");
       setStep("code");
     } catch (requestError) {
       setError(
@@ -127,13 +132,7 @@ export function TeacherLoginForm() {
         throw new Error("That code is incorrect or has expired.");
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", verification.user?.id ?? "")
-        .maybeSingle();
-
-      router.replace(profile?.is_admin ? "/admin" : "/teacher");
+      router.replace(destination);
       router.refresh();
     } catch (verificationError) {
       setError(
@@ -200,12 +199,12 @@ export function TeacherLoginForm() {
     <form className="teacher-login-form" onSubmit={requestCode}>
       <LoginLogo />
       <label>
-        School email
+        School or platform email
         <input
           autoComplete="email"
           autoFocus
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@school.org"
+          placeholder="you@organization.org"
           required
           type="email"
           value={email}

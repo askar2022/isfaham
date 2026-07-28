@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { TeacherLoginForm } from "@/components/TeacherLoginForm";
+import { isPlatformAdministrator } from "@/lib/platform-admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -9,6 +10,7 @@ export const metadata = {
 
 export default async function TeacherLoginPage() {
   let hasSession = false;
+  let platformAdmin = false;
 
   try {
     const supabase = await createServerSupabaseClient();
@@ -16,12 +18,13 @@ export default async function TeacherLoginPage() {
       data: { user },
     } = await supabase.auth.getUser();
     hasSession = Boolean(user);
+    platformAdmin = await isPlatformAdministrator(user?.email);
   } catch {
     // The form displays configuration errors when credentials are unavailable.
   }
 
   if (hasSession) {
-    redirect("/teacher");
+    redirect(platformAdmin ? "/admin/personal" : "/teacher");
   }
 
   return (

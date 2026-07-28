@@ -18,21 +18,32 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
-    const { data: approvedTeacher, error: approvalError } = await admin
-      .from("approved_teachers")
-      .select("email, full_name, school_id")
-      .eq("email", email)
-      .eq("is_active", true)
-      .maybeSingle();
+    const [
+      { data: approvedTeacher, error: approvalError },
+      { data: platformAdmin, error: platformAdminError },
+    ] = await Promise.all([
+      admin
+        .from("approved_teachers")
+        .select("email, full_name, school_id")
+        .eq("email", email)
+        .eq("is_active", true)
+        .maybeSingle(),
+      admin
+        .from("platform_administrators")
+        .select("email, full_name")
+        .eq("email", email)
+        .maybeSingle(),
+    ]);
 
-    if (approvalError) {
-      throw approvalError;
+    if (approvalError || platformAdminError) {
+      throw approvalError ?? platformAdminError;
     }
 
-    if (!approvedTeacher) {
+    if (!approvedTeacher && !platformAdmin) {
       return NextResponse.json(
         {
-          error: "Sign-in is unavailable. Contact your school administrator.",
+          error:
+            "Sign-in is unavailable. Contact your school or Isfaham administrator.",
         },
         { status: 403 },
       );
@@ -42,8 +53,8 @@ export async function POST(request: Request) {
       email,
       email_confirm: true,
       user_metadata: {
-        full_name: approvedTeacher.full_name,
-        school_id: approvedTeacher.school_id,
+        full_name: approvedTeacher?.full_name ?? platformAdmin?.full_name,
+        school_id: approvedTeacher?.school_id,
       },
     });
 
@@ -82,7 +93,10 @@ export async function POST(request: Request) {
       throw otpError;
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      destination: platformAdmin ? "/admin/personal" : "/teacher",
+    });
   } catch (error) {
     console.error("Teacher OTP request failed:", error);
     return NextResponse.json(
