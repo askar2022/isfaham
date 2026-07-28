@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { PlatformAdminHeader } from "@/components/PlatformAdminHeader";
 
 type Teacher = {
   email: string;
@@ -28,9 +29,11 @@ type Teacher = {
 export function AdminTeacherPortal({
   schoolName,
   initialTeachers,
+  isPlatformAdmin,
 }: {
   schoolName: string;
   initialTeachers: Teacher[];
+  isPlatformAdmin: boolean;
 }) {
   const router = useRouter();
   const [teachers, setTeachers] = useState(initialTeachers);
@@ -142,22 +145,26 @@ export function AdminTeacherPortal({
 
   return (
     <main className="admin-page">
-      <header className="admin-header">
-        <Link href="/teacher">
-          <ArrowLeft size={18} />
-          Staff workspace
-        </Link>
-        <div className="admin-header-actions">
-          <span>
-            <ShieldCheck size={17} />
-            School administrator
-          </span>
-          <button onClick={signOut}>
-            <LogOut size={16} />
-            Sign out
-          </button>
-        </div>
-      </header>
+      {isPlatformAdmin ? (
+        <PlatformAdminHeader />
+      ) : (
+        <header className="admin-header">
+          <Link href="/teacher">
+            <ArrowLeft size={18} />
+            Staff workspace
+          </Link>
+          <div className="admin-header-actions">
+            <span>
+              <ShieldCheck size={17} />
+              School administrator
+            </span>
+            <button onClick={signOut}>
+              <LogOut size={16} />
+              Sign out
+            </button>
+          </div>
+        </header>
+      )}
 
       <div className="admin-main">
         <section className="admin-title">

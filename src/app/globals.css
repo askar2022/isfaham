@@ -3350,3 +3350,258 @@ footer a:hover {
     padding: 13px;
   }
 }
+
+.platform-admin-header nav {
+  display: flex;
+  gap: 8px;
+}
+
+.platform-admin-header nav a {
+  border-radius: 9px;
+  color: #6f6877;
+  padding: 8px 10px;
+}
+
+.platform-admin-header nav a:hover,
+.platform-admin-header nav a.platform-nav-active {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+
+.platform-metrics {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 34px;
+}
+
+.platform-metrics article {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: grid;
+  gap: 6px;
+  padding: 20px;
+}
+
+.platform-metrics article > svg {
+  color: var(--purple);
+}
+
+.platform-metrics article strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 28px;
+  letter-spacing: -0.8px;
+}
+
+.platform-metrics article span {
+  color: #837c89;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.personal-user-table {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.personal-user-table-head,
+.personal-user-row {
+  align-items: center;
+  display: grid;
+  gap: 15px;
+  grid-template-columns: 1.65fr 0.85fr 0.9fr 0.6fr 1.15fr;
+  padding: 12px 18px;
+}
+
+.personal-user-table-head {
+  background: #faf9fc;
+  border-bottom: 1px solid var(--line);
+  color: #8b8492;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.personal-user-row {
+  border-bottom: 1px solid var(--line);
+  min-height: 76px;
+}
+
+.personal-user-row:last-of-type {
+  border-bottom: 0;
+}
+
+.personal-user-row > span:not(.teacher-identity):not(.teacher-access-status) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.personal-user-row > span > strong {
+  color: #332c3a;
+  font-size: 12px;
+}
+
+.personal-user-row > span > small {
+  color: #8a8390;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.personal-user-actions {
+  align-items: stretch;
+  flex-direction: row !important;
+  gap: 6px !important;
+}
+
+.personal-user-actions button,
+.admin-pagination button {
+  align-items: center;
+  background: white;
+  border: 1px solid #dcd6e3;
+  border-radius: 8px;
+  color: #635b6b;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 800;
+  gap: 5px;
+  justify-content: center;
+  padding: 8px;
+}
+
+.personal-user-actions button:hover,
+.admin-pagination button:hover:not(:disabled) {
+  border-color: #9e88e6;
+  color: var(--purple);
+}
+
+.personal-user-actions .personal-delete-button {
+  border-color: #edccd5;
+  color: #b62956;
+}
+
+.personal-user-actions button:disabled,
+.admin-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.admin-pagination {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  gap: 14px;
+}
+
+.admin-pagination span {
+  color: #77707e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.guest-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.guest-loading {
+  align-items: center;
+  color: #7a7281;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.guest-privacy-card {
+  align-items: flex-start;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  display: flex;
+  gap: 14px;
+  margin-top: 28px;
+  padding: 24px;
+}
+
+.guest-privacy-card > span {
+  align-items: center;
+  background: var(--purple-soft);
+  border-radius: 13px;
+  color: var(--purple);
+  display: flex;
+  height: 46px;
+  justify-content: center;
+  min-width: 46px;
+}
+
+.guest-privacy-card h2 {
+  margin: 0 0 7px;
+}
+
+.guest-privacy-card p {
+  color: var(--muted);
+  line-height: 1.65;
+  margin: 0;
+  max-width: 720px;
+}
+
+@media (max-width: 860px) {
+  .platform-admin-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .platform-admin-header nav {
+    flex-wrap: wrap;
+  }
+
+  .platform-metrics,
+  .guest-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .personal-user-table-head {
+    display: none;
+  }
+
+  .personal-user-row {
+    grid-template-columns: 1fr 1fr;
+    padding: 16px;
+  }
+
+  .personal-user-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 540px) {
+  .platform-admin-header nav {
+    width: 100%;
+  }
+
+  .platform-admin-header nav a {
+    flex: 1;
+    font-size: 9px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .platform-metrics,
+  .guest-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .personal-user-row {
+    grid-template-columns: 1fr;
+  }
+
+  .personal-user-actions button {
+    flex: 1;
+  }
+}

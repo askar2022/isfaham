@@ -49,6 +49,7 @@ database or storage.
    - `202607260005_translation_credits.sql`
    - `202607260006_revenuecat_credits.sql`
    - `202607260007_consumer_remote_conversations.sql`
+   - `202607260008_platform_administrators.sql`
 2. Insert a school and its approved staff emails into `approved_teachers`.
    Supabase’s Table Editor can import a CSV into this table.
 3. In Supabase Authentication, change the email template to include
@@ -146,6 +147,25 @@ The second statement is only necessary if that administrator has already
 signed in. Administrators can then open `/admin` to add, search, deactivate, and
 reactivate approved staff emails for their own school. Administrator accounts
 cannot be deactivated through the portal.
+
+School administrators remain scoped to their own staff directory. To give an
+Isfaham operator access to Personal-user management and privacy-safe guest
+metrics, add that verified email separately after applying migration 008:
+
+```sql
+insert into public.platform_administrators (email, full_name)
+values ('owner@isfaham.org', 'Isfaham owner')
+on conflict (email) do update set full_name = excluded.full_name;
+```
+
+Platform administrators see three separate workspaces:
+
+- `/admin` — staff for the administrator’s school only
+- `/admin/personal` — registered Personal users, balances, access, and deletion
+- `/admin/guests` — aggregate guest-trial metrics without an individual guest list
+
+Never add a school administrator to `platform_administrators` unless that
+person is authorized to manage Isfaham-wide consumer data.
 
 ## Mobile app
 
