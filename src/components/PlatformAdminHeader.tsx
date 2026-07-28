@@ -24,7 +24,9 @@ export function PlatformAdminHeader({
 
   async function signOut() {
     await createBrowserSupabaseClient().auth.signOut();
-    router.replace("/teacher/login");
+    router.replace(
+      workspace === "school" ? "/teacher/login" : "/admin/login",
+    );
     router.refresh();
   }
 

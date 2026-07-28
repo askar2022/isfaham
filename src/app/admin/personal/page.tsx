@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PersonalUsersPage() {
   const context = await getPlatformAdminContext();
-  if (!context) redirect("/admin");
+  if (!context) redirect("/admin/login");
 
   return <AdminPersonalUsers />;
 }

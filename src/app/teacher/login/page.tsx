@@ -10,6 +10,7 @@ export const metadata = {
 
 export default async function TeacherLoginPage() {
   let hasSession = false;
+  let hasSchoolProfile = false;
   let platformAdmin = false;
 
   try {
@@ -18,21 +19,32 @@ export default async function TeacherLoginPage() {
       data: { user },
     } = await supabase.auth.getUser();
     hasSession = Boolean(user);
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      hasSchoolProfile = Boolean(profile);
+    }
     platformAdmin = await isPlatformAdministrator(user?.email);
   } catch {
     // The form displays configuration errors when credentials are unavailable.
   }
 
   if (hasSession) {
-    redirect(platformAdmin ? "/admin/personal" : "/teacher");
+    redirect(
+      hasSchoolProfile
+        ? "/teacher"
+        : platformAdmin
+          ? "/admin/personal"
+          : "/teacher",
+    );
   }
 
   return (
     <main className="auth-page">
       <TeacherLoginForm />
-      <a className="auth-support" href="mailto:hello@isfaham.org">
-        Contact developer and designer Dr. Askar
-      </a>
     </main>
   );
 }

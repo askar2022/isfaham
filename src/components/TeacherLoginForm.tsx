@@ -29,7 +29,11 @@ function LoginLogo() {
   );
 }
 
-export function TeacherLoginForm() {
+export function TeacherLoginForm({
+  portal = "school",
+}: {
+  portal?: "platform" | "school";
+}) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
@@ -90,7 +94,7 @@ export function TeacherLoginForm() {
       const response = await fetch("/api/auth/request-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, portal }),
       });
       const body = (await response.json()) as {
         destination?: string;
@@ -198,13 +202,20 @@ export function TeacherLoginForm() {
   return (
     <form className="teacher-login-form" onSubmit={requestCode}>
       <LoginLogo />
+      <h1>
+        {portal === "platform"
+          ? "Platform administrator sign in"
+          : "School staff sign in"}
+      </h1>
       <label>
-        School or platform email
+        {portal === "platform" ? "Administrator email" : "School email"}
         <input
           autoComplete="email"
           autoFocus
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@organization.org"
+          placeholder={
+            portal === "platform" ? "admin@isfaham.org" : "you@school.org"
+          }
           required
           type="email"
           value={email}

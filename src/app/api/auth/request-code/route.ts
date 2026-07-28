@@ -7,12 +7,19 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
-    const { email: rawEmail } = (await request.json()) as { email?: string };
+    const { email: rawEmail, portal = "school" } = (await request.json()) as {
+      email?: string;
+      portal?: "platform" | "school";
+    };
     const email = rawEmail?.trim().toLowerCase();
 
-    if (!email || !EMAIL_PATTERN.test(email)) {
+    if (
+      !email ||
+      !EMAIL_PATTERN.test(email) ||
+      !["platform", "school"].includes(portal)
+    ) {
       return NextResponse.json(
-        { error: "Enter a valid school email address." },
+        { error: "Enter a valid email address." },
         { status: 400 },
       );
     }
@@ -39,11 +46,15 @@ export async function POST(request: Request) {
       throw approvalError ?? platformAdminError;
     }
 
-    if (!approvedTeacher && !platformAdmin) {
+    const authorized =
+      portal === "platform" ? Boolean(platformAdmin) : Boolean(approvedTeacher);
+    if (!authorized) {
       return NextResponse.json(
         {
           error:
-            "Sign-in is unavailable. Contact your school or Isfaham administrator.",
+            portal === "platform"
+              ? "This email is not an approved Isfaham platform administrator."
+              : "Sign-in is unavailable. Contact your school administrator.",
         },
         { status: 403 },
       );
@@ -53,8 +64,11 @@ export async function POST(request: Request) {
       email,
       email_confirm: true,
       user_metadata: {
-        full_name: approvedTeacher?.full_name ?? platformAdmin?.full_name,
-        school_id: approvedTeacher?.school_id,
+        full_name:
+          portal === "platform"
+            ? platformAdmin?.full_name
+            : approvedTeacher?.full_name,
+        school_id: portal === "school" ? approvedTeacher?.school_id : undefined,
       },
     });
 
@@ -95,7 +109,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      destination: platformAdmin ? "/admin/personal" : "/teacher",
+      destination: portal === "platform" ? "/admin/personal" : "/teacher",
     });
   } catch (error) {
     console.error("Teacher OTP request failed:", error);
