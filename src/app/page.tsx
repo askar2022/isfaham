@@ -2,12 +2,14 @@ import {
   Apple,
   ArrowRight,
   Check,
+  Clock3,
   Languages,
   LockKeyhole,
   Mic,
   Play,
   School,
   Sparkles,
+  UserRound,
   Volume2,
   Waves,
 } from "lucide-react";
@@ -40,6 +42,36 @@ const benefits = [
   "Simple enough for anyone to use",
   "Built around school and family communication",
   "Conversations stay private by default",
+];
+
+const audiences = [
+  {
+    icon: Clock3,
+    label: "No account required",
+    title: "Start as a guest",
+    text: "Try two minutes of live Somali–English translation before deciding whether to create an account.",
+    points: ["Use one phone together", "No payment information", "Private by default"],
+    href: "#download",
+    action: "Try 2 minutes free",
+  },
+  {
+    icon: UserRound,
+    label: "Free Personal account",
+    title: "Keep translating",
+    text: "Save your translation balance, use Isfaham across devices, and add more time only when you need it.",
+    points: ["Save your remaining minutes", "Invite another phone", "Guest joins free"],
+    href: "#download",
+    action: "Get the app",
+  },
+  {
+    icon: School,
+    label: "For schools",
+    title: "Support every family",
+    text: "Give approved staff secure translation tools for conversations with Somali-speaking students and families.",
+    points: ["Approved staff access", "Remote family invitations", "School usage overview"],
+    href: "#for-schools",
+    action: "Explore school access",
+  },
 ];
 
 function BrandMark() {
@@ -78,7 +110,7 @@ function ConversationPreview() {
         </div>
         <div className="message message-somali">
           <small>Somali</small>
-          <p>Sidee ayuu dugsiga uga socdaa ilmahayga?</p>
+          <p>Ma ku hadli karnaa Af-Soomaali?</p>
           <div className="message-meta">
             <Waves size={16} />
             <span>Just now</span>
@@ -90,7 +122,7 @@ function ConversationPreview() {
         </div>
         <div className="message message-english">
           <small>English</small>
-          <p>How is my child doing at school?</p>
+          <p>Can we speak in Somali?</p>
           <button type="button" aria-label="Play English translation">
             <Play size={16} fill="currentColor" />
             Listen
@@ -136,12 +168,12 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
+          <a href="#ways-to-use">Personal & guest</a>
           <a href="#for-schools">For schools</a>
           <a href="#download">Get the app</a>
-          <a href="#about">Why Isfaham</a>
         </nav>
-        <a className="button button-small" href="#pilot">
-          Join the pilot
+        <a className="button button-small" href="#download">
+          Try it free
           <ArrowRight size={16} />
         </a>
       </header>
@@ -150,24 +182,25 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow">
             <span className="eyebrow-icon">
-              <School size={15} />
+              <Languages size={15} />
             </span>
-            Built for schools and families
+            Live Somali ↔ English translation
           </div>
           <h1>
-            Every family deserves to be <em>understood.</em>
+            Speak freely. <em>Understand each other.</em>
           </h1>
           <p className="hero-lead">
             Isfaham translates Somali and English conversations in real time,
-            helping teachers and families connect without a language barrier.
+            whether you are talking with family, helping a customer, or
+            connecting a school with parents.
           </p>
           <div className="hero-actions">
-            <a className="button" href="#pilot">
-              Bring Isfaham to your school
+            <a className="button" href="#download">
+              Try 2 minutes free
               <ArrowRight size={18} />
             </a>
-            <a className="text-link" href="#how-it-works">
-              See how it works
+            <a className="text-link" href="#for-schools">
+              Isfaham for schools
               <span>↓</span>
             </a>
           </div>
@@ -178,8 +211,8 @@ export default function Home() {
               <span>P</span>
             </div>
             <p>
-              <strong>Made with our community</strong>
-              <span>For real conversations that matter</span>
+              <strong>No account required to try</strong>
+              <span>Create a free account when you are ready</span>
             </p>
           </div>
         </div>
@@ -205,7 +238,7 @@ export default function Home() {
           <LockKeyhole size={23} />
           <span>
             <strong>Privacy first</strong>
-            Designed for school communities
+            Designed for real conversations
           </span>
         </div>
       </section>
@@ -230,6 +263,45 @@ export default function Home() {
               <p>{text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="audience-section section" id="ways-to-use">
+        <div className="section-heading">
+          <span className="section-kicker">One translator, your choice</span>
+          <h2>Start the way that works for you.</h2>
+          <p>
+            Try Isfaham without an account, create a Personal account when you
+            want more, or bring secure translation access to your school.
+          </p>
+        </div>
+        <div className="audience-grid">
+          {audiences.map(
+            ({ icon: Icon, label, title, text, points, href, action }) => (
+              <article className="audience-card" key={title}>
+                <div className="audience-card-top">
+                  <span className="audience-icon">
+                    <Icon size={24} />
+                  </span>
+                  <span className="audience-label">{label}</span>
+                </div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+                <ul>
+                  {points.map((point) => (
+                    <li key={point}>
+                      <Check size={14} strokeWidth={3} />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+                <a className="audience-link" href={href}>
+                  {action}
+                  <ArrowRight size={16} />
+                </a>
+              </article>
+            ),
+          )}
         </div>
       </section>
 
@@ -288,10 +360,11 @@ export default function Home() {
       <section className="download-section section" id="download">
         <div className="download-copy">
           <span className="section-kicker">One app, two platforms</span>
-          <h2>Keep understanding close at hand.</h2>
+          <h2>Start free. Create an account when you are ready.</h2>
           <p>
-            Isfaham is being prepared for iPhone and Android. Join the pilot now
-            and we’ll let you know when school testing begins.
+            Begin with two free translation minutes and no account. A free
+            Personal account lets you keep your balance, invite another phone,
+            and purchase more time when needed.
           </p>
           <div className="store-buttons">
             {iosAppUrl ? (
@@ -359,7 +432,7 @@ export default function Home() {
         </blockquote>
         <p>
           We are building technology around a simple belief: language should
-          never stand between a family and their child’s education.
+          never stand between people who need to understand each other.
         </p>
       </section>
 
@@ -386,6 +459,7 @@ export default function Home() {
           <a href="/terms">Terms</a>
           <a href="/support">Support</a>
           <a href="/contact">Contact</a>
+          <a href="/delete-account">Delete account</a>
           <span>© 2026 Isfaham</span>
         </div>
       </footer>

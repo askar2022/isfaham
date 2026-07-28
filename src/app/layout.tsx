@@ -19,11 +19,11 @@ export const metadata: Metadata = {
     template: "%s | Isfaham",
   },
   description:
-    "Real-time Somali and English voice translation that helps schools and families communicate clearly.",
+    "Real-time Somali and English voice translation for Personal conversations, families, and schools. Try two minutes free without an account.",
   openGraph: {
     title: "Isfaham — Understand each other",
     description:
-      "Real-time Somali and English voice translation for schools and families.",
+      "Real-time Somali and English voice translation for everyday conversations, families, and schools.",
     url: "https://isfaham.org",
     siteName: "Isfaham",
     type: "website",
