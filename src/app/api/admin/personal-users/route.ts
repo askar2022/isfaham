@@ -109,13 +109,13 @@ export async function GET(request: Request) {
     const allUsers = await listAllUsers(context.admin);
     const [profileIds, platformAdminResult, approvedTeacherResult] =
       await Promise.all([
-      getProfileIds(
-        context.admin,
-        allUsers.map((user) => user.id),
-      ),
-      context.admin.from("platform_administrators").select("email"),
-      context.admin.from("approved_teachers").select("email"),
-    ]);
+        getProfileIds(
+          context.admin,
+          allUsers.map((user) => user.id),
+        ),
+        context.admin.from("platform_administrators").select("email"),
+        context.admin.from("approved_teachers").select("email"),
+      ]);
     if (platformAdminResult.error) throw platformAdminResult.error;
     if (approvedTeacherResult.error) throw approvedTeacherResult.error;
     const platformAdmins = platformAdminResult.data;
@@ -128,7 +128,7 @@ export async function GET(request: Request) {
       ),
     );
     const guests = allUsers.filter((user) => user.is_anonymous);
-    const personalUsers = allUsers
+    const registeredPersonalUsers = allUsers
       .filter(
         (user) =>
           !user.is_anonymous &&
@@ -136,26 +136,67 @@ export async function GET(request: Request) {
           !platformEmails.has(user.email?.toLowerCase() ?? "") &&
           !approvedTeacherEmails.has(user.email?.toLowerCase() ?? ""),
       )
-      .filter((user) => !search || user.email?.toLowerCase().includes(search))
       .sort(
         (first, second) =>
           new Date(second.created_at).getTime() -
           new Date(first.created_at).getTime(),
       );
+    const personalUsers = registeredPersonalUsers.filter(
+      (user) => !search || user.email?.toLowerCase().includes(search),
+    );
+    const [allPersonalWallets, conversationResult] = await Promise.all([
+      getWallets(
+        context.admin,
+        registeredPersonalUsers.map((user) => user.id),
+      ),
+      context.admin
+        .from("conversations")
+        .select(
+          "parent_joined_at, turn_count, translation_failure_count, estimated_cost_microusd",
+        )
+        .eq("conversation_type", "consumer"),
+    ]);
+    if (conversationResult.error) throw conversationResult.error;
 
     const start = (page - 1) * perPage;
     const selectedUsers = personalUsers.slice(start, start + perPage);
-    const wallets = await getWallets(
-      context.admin,
-      selectedUsers.map((user) => user.id),
-    );
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+    const walletUsage = [...allPersonalWallets.values()].reduce(
+      (summary, wallet) => {
+        summary.balanceSeconds += Number(wallet.balance_seconds ?? 0);
+        summary.purchasedSeconds += Number(wallet.purchased_seconds ?? 0);
+        summary.usedSeconds += Number(wallet.used_seconds ?? 0);
+        return summary;
+      },
+      { balanceSeconds: 0, purchasedSeconds: 0, usedSeconds: 0 },
+    );
+    const consumerUsage = (conversationResult.data ?? []).reduce(
+      (summary, conversation) => {
+        summary.conversations += 1;
+        summary.turns += Number(conversation.turn_count ?? 0);
+        summary.translationFailures += Number(
+          conversation.translation_failure_count ?? 0,
+        );
+        summary.estimatedCostMicrousd += Number(
+          conversation.estimated_cost_microusd ?? 0,
+        );
+        if (conversation.parent_joined_at) summary.guestJoins += 1;
+        return summary;
+      },
+      {
+        conversations: 0,
+        turns: 0,
+        guestJoins: 0,
+        translationFailures: 0,
+        estimatedCostMicrousd: 0,
+      },
+    );
 
     return NextResponse.json(
       {
         users: selectedUsers.map((user) => {
-          const wallet = wallets.get(user.id);
+          const wallet = allPersonalWallets.get(user.id);
           return {
             id: user.id,
             email: user.email ?? "Email unavailable",
@@ -176,18 +217,23 @@ export async function GET(request: Request) {
           totalPages: Math.max(1, Math.ceil(personalUsers.length / perPage)),
         },
         overview: {
-          personalUsers: allUsers.filter(
-            (user) =>
-              !user.is_anonymous &&
-              !profileIds.has(user.id) &&
-              !platformEmails.has(user.email?.toLowerCase() ?? "") &&
-              !approvedTeacherEmails.has(user.email?.toLowerCase() ?? ""),
-          ).length,
+          personalUsers: registeredPersonalUsers.length,
           schoolStaff: profileIds.size,
           guestTrials: guests.length,
           guestTrialsLast30Days: guests.filter(
             (user) => new Date(user.created_at).getTime() >= thirtyDaysAgo,
           ).length,
+        },
+        usage: {
+          ...walletUsage,
+          remoteConversations: consumerUsage.conversations,
+          guestJoins: consumerUsage.guestJoins,
+          averageRemoteTurns: consumerUsage.conversations
+            ? consumerUsage.turns / consumerUsage.conversations
+            : 0,
+          translationFailures: consumerUsage.translationFailures,
+          estimatedCostUsd:
+            consumerUsage.estimatedCostMicrousd / 1_000_000,
         },
       },
       { headers: { "Cache-Control": "no-store" } },

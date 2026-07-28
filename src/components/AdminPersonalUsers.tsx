@@ -1,14 +1,20 @@
 "use client";
 
 import {
+  AudioLines,
   Ban,
+  BarChart3,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock3,
+  DollarSign,
   Loader2,
+  MessageCircleMore,
   Search,
   Trash2,
+  UserCheck,
   UserRound,
   WalletCards,
 } from "lucide-react";
@@ -41,6 +47,17 @@ type Pagination = {
   totalPages: number;
 };
 
+type Usage = {
+  balanceSeconds: number;
+  purchasedSeconds: number;
+  usedSeconds: number;
+  remoteConversations: number;
+  guestJoins: number;
+  averageRemoteTurns: number;
+  translationFailures: number;
+  estimatedCostUsd: number;
+};
+
 function formatMinutes(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   return minutes >= 60
@@ -58,6 +75,7 @@ function formatDate(value: string | null) {
 export function AdminPersonalUsers() {
   const [users, setUsers] = useState<PersonalUser[]>([]);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [usage, setUsage] = useState<Usage | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -80,14 +98,22 @@ export function AdminPersonalUsers() {
         users?: PersonalUser[];
         overview?: Overview;
         pagination?: Pagination;
+        usage?: Usage;
         error?: string;
       };
-      if (!response.ok || !body.users || !body.overview || !body.pagination) {
+      if (
+        !response.ok ||
+        !body.users ||
+        !body.overview ||
+        !body.pagination ||
+        !body.usage
+      ) {
         throw new Error(body.error || "Personal users could not be loaded.");
       }
       setUsers(body.users);
       setOverview(body.overview);
       setPagination(body.pagination);
+      setUsage(body.usage);
     } catch (loadError) {
       setError(
         loadError instanceof Error ? loadError.message : "Please try again.",
@@ -164,6 +190,49 @@ export function AdminPersonalUsers() {
     }
   }
 
+  const usageCards = [
+    {
+      label: "Translation time used",
+      value: usage ? formatMinutes(usage.usedSeconds) : "—",
+      icon: AudioLines,
+    },
+    {
+      label: "Minutes purchased",
+      value: usage ? formatMinutes(usage.purchasedSeconds) : "—",
+      icon: WalletCards,
+    },
+    {
+      label: "Available balance",
+      value: usage ? formatMinutes(usage.balanceSeconds) : "—",
+      icon: Clock3,
+    },
+    {
+      label: "Remote conversations",
+      value: usage?.remoteConversations.toLocaleString() ?? "—",
+      icon: BarChart3,
+    },
+    {
+      label: "Guest joins",
+      value: usage?.guestJoins.toLocaleString() ?? "—",
+      icon: UserCheck,
+    },
+    {
+      label: "Average remote turns",
+      value: usage?.averageRemoteTurns.toFixed(1) ?? "—",
+      icon: MessageCircleMore,
+    },
+    {
+      label: "Translation failures",
+      value: usage?.translationFailures.toLocaleString() ?? "—",
+      icon: Ban,
+    },
+    {
+      label: "Estimated AI cost",
+      value: usage ? `$${usage.estimatedCostUsd.toFixed(2)}` : "—",
+      icon: DollarSign,
+    },
+  ];
+
   return (
     <main className="admin-page">
       <PlatformAdminHeader />
@@ -205,6 +274,30 @@ export function AdminPersonalUsers() {
             <span>Guest trials, separately</span>
           </article>
         </section>
+
+        <details className="usage-section personal-usage-section" open>
+          <summary className="usage-heading">
+            <div>
+              <h2>Personal usage</h2>
+              <span>
+                Registered Personal accounts • All time • No audio or transcript
+                data
+              </span>
+            </div>
+            <ChevronDown aria-hidden="true" size={20} />
+          </summary>
+          <div className="usage-grid">
+            {usageCards.map(({ label, value, icon: Icon }) => (
+              <article className="usage-card" key={label}>
+                <span className="usage-card-icon">
+                  <Icon size={18} />
+                </span>
+                <strong>{value}</strong>
+                <small>{label}</small>
+              </article>
+            ))}
+          </div>
+        </details>
 
         <section className="teacher-directory personal-directory">
           <div className="directory-heading">
