@@ -6,7 +6,6 @@ import {
   Alert,
   AppState,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -18,21 +17,20 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
-  createCreditCheckout,
   CreditBalance,
   CreditPackage,
   getCreditBalance,
 } from "../lib/credits";
 import {
-  getAppleCreditProducts,
+  getStoreCreditProducts,
   isCancelledPurchase,
-  logOutApplePurchases,
-  purchaseAppleCredits,
-  type AppleCreditProduct,
+  logOutPurchases,
+  purchaseStoreCredits,
+  type StoreCreditProduct,
 } from "../lib/iap";
 import { supabase } from "../lib/supabase";
 
-const APPLE_PRODUCT_BY_PACKAGE: Record<string, string> = {
+const STORE_PRODUCT_BY_PACKAGE: Record<string, string> = {
   starter: "isfaham_1_hour",
   standard: "isfaham_5_hours",
   premium: "isfaham_10_hours",
@@ -73,7 +71,7 @@ function CreditWallet({
   const [balance, setBalance] = useState<CreditBalance | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
-  const [appleProducts, setAppleProducts] = useState<AppleCreditProduct[]>([]);
+  const [storeProducts, setStoreProducts] = useState<StoreCreditProduct[]>([]);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -104,18 +102,18 @@ function CreditWallet({
   }, [refresh]);
 
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
+    if (Platform.OS !== "ios" && Platform.OS !== "android") return;
     let active = true;
-    void getAppleCreditProducts(session.user.id)
+    void getStoreCreditProducts(session.user.id)
       .then((products) => {
-        if (active) setAppleProducts(products);
+        if (active) setStoreProducts(products);
       })
       .catch((productError) => {
         if (active) {
           setError(
             productError instanceof Error
               ? productError.message
-              : "Apple purchases are unavailable.",
+              : "In-app purchases are unavailable.",
           );
         }
       });
@@ -138,29 +136,29 @@ function CreditWallet({
     setBuying(creditPackage.id);
     setError("");
     try {
-      if (Platform.OS === "ios") {
-        const productId = APPLE_PRODUCT_BY_PACKAGE[creditPackage.id];
-        const product = appleProducts.find(
-          (candidate) => candidate.identifier === productId,
+      const productId = STORE_PRODUCT_BY_PACKAGE[creditPackage.id];
+      const product = storeProducts.find(
+        (candidate) => candidate.identifier === productId,
+      );
+      if (!product) {
+        throw new Error(
+          Platform.OS === "ios"
+            ? "This Apple purchase is unavailable."
+            : "This Google Play purchase is unavailable.",
         );
-        if (!product) throw new Error("This Apple purchase is unavailable.");
+      }
 
-        await purchaseAppleCredits(session.user.id, product);
-        const updated = await waitForPurchasedCredits(
-          balance?.balanceSeconds ?? 0,
+      await purchaseStoreCredits(session.user.id, product);
+      const updated = await waitForPurchasedCredits(
+        balance?.balanceSeconds ?? 0,
+      );
+      if (!updated) {
+        Alert.alert(
+          "Purchase confirmed",
+          `${
+            Platform.OS === "ios" ? "Apple" : "Google Play"
+          } confirmed your purchase. Your balance will update shortly.`,
         );
-        if (!updated) {
-          Alert.alert(
-            "Purchase confirmed",
-            "Apple confirmed your purchase. Your balance will update shortly.",
-          );
-        }
-      } else {
-        const checkoutUrl = await createCreditCheckout(
-          creditPackage.id,
-          session.access_token,
-        );
-        await Linking.openURL(checkoutUrl);
       }
     } catch (checkoutError) {
       if (isCancelledPurchase(checkoutError)) return;
@@ -232,18 +230,17 @@ function CreditWallet({
               <Text style={styles.sectionDescription}>
                 {Platform.OS === "ios"
                   ? "Purchase securely with your Apple ID. Apple displays the price for your region."
-                  : "Checkout opens securely in your browser and supports eligible payment methods."}
+                  : "Purchase securely with Google Play. Google displays the price for your region."}
               </Text>
               <View style={styles.packages}>
                 {balance?.packages.map((creditPackage) => (
                   (() => {
-                    const appleProduct = appleProducts.find(
+                    const storeProduct = storeProducts.find(
                       (product) =>
                         product.identifier ===
-                        APPLE_PRODUCT_BY_PACKAGE[creditPackage.id],
+                        STORE_PRODUCT_BY_PACKAGE[creditPackage.id],
                     );
-                    const unavailable =
-                      Platform.OS === "ios" && !appleProduct;
+                    const unavailable = !storeProduct;
                     return (
                   <Pressable
                     disabled={Boolean(buying) || unavailable}
@@ -268,9 +265,7 @@ function CreditWallet({
                       <ActivityIndicator color="#5B38D2" />
                     ) : (
                       <Text style={styles.packagePrice}>
-                        {Platform.OS === "ios"
-                          ? appleProduct?.priceString ?? "Unavailable"
-                          : `$${(creditPackage.amountCents / 100).toFixed(2)}`}
+                        {storeProduct?.priceString ?? "Unavailable"}
                       </Text>
                     )}
                   </Pressable>
@@ -281,14 +276,14 @@ function CreditWallet({
               <Text style={styles.disclosure}>
                 {Platform.OS === "ios"
                   ? "Payment is charged to your Apple ID. Translation Credits are consumable and can be purchased again."
-                  : "Purchases are completed on Isfaham’s secure Stripe checkout."}
+                  : "Payment is charged through Google Play. Translation Credits are consumable and can be purchased again."}
               </Text>
             </>
           )}
           {!!error && <Text style={styles.error}>{error}</Text>}
           <Pressable
             onPress={() =>
-              void logOutApplePurchases()
+              void logOutPurchases()
                 .catch(() => undefined)
                 .then(() => supabase?.auth.signOut())
             }

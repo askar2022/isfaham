@@ -38,7 +38,7 @@ import {
   TranslationResult,
   translateRecording,
 } from "./src/lib/api";
-import { logOutApplePurchases } from "./src/lib/iap";
+import { logOutPurchases } from "./src/lib/iap";
 import { supabase } from "./src/lib/supabase";
 import { CreditsScreen } from "./src/screens/CreditsScreen";
 import { ConsumerRemote } from "./src/screens/ConsumerRemote";
@@ -682,12 +682,12 @@ function AppContent() {
               throw new Error("Sign in before deleting an account.");
             }
             await deleteAccount(session.access_token);
-            await logOutApplePurchases().catch(() => undefined);
+            await logOutPurchases().catch(() => undefined);
             await supabase?.auth.signOut({ scope: "local" });
             selectTab("translate");
           }}
           onSignOut={() => {
-            void logOutApplePurchases()
+            void logOutPurchases()
               .catch(() => undefined)
               .then(() => supabase?.auth.signOut({ scope: "local" }))
               .finally(() => selectTab("translate"));

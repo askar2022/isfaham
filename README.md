@@ -18,7 +18,7 @@ The first working release needs:
 4. **Supabase** — accounts and usage data (optional until authentication ships)
 5. **Vercel** — website and secure API hosting
 6. **Expo EAS** — iOS/Android cloud builds and store submission
-7. **RevenueCat and Apple IAP** — iOS consumable Translation Credits
+7. **RevenueCat, Apple IAP, and Google Play Billing** — native consumable Translation Credits
 8. **Stripe** — website credit checkout, school billing, and payment webhooks
 
 Never expose Azure or Resend secret keys in the Expo app. They belong in Vercel
@@ -94,19 +94,21 @@ up to one minute, then refund the unused seconds after Azure reports the actual
 speech duration. School staff usage is funded by the school and bypasses the
 personal wallet.
 
-On iOS, the app fetches localized prices from Apple and purchases the consumable
-products `isfaham_1_hour`, `isfaham_5_hours`, and `isfaham_10_hours` through
-RevenueCat. Configure `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` in `mobile/.env` and
-EAS. Add this RevenueCat webhook URL and set its Authorization header to
+On iOS and Android, the app fetches localized store prices and purchases the
+consumable products `isfaham_1_hour`, `isfaham_5_hours`, and
+`isfaham_10_hours` through RevenueCat. Configure
+`EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` and
+`EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY` in `mobile/.env` and EAS. Add this
+RevenueCat webhook URL and set its Authorization header to
 `Bearer <REVENUECAT_WEBHOOK_AUTH_TOKEN>`:
 
 ```text
 https://isfaham.org/api/revenuecat/webhook
 ```
 
-Subscribe it to `NON_RENEWING_PURCHASE` events for the App Store. The server
-verifies the configured authorization token and grants credits idempotently by
-Apple transaction ID.
+Subscribe it to `NON_RENEWING_PURCHASE` events for the App Store and Google
+Play. The server verifies the configured authorization token and grants credits
+idempotently by store transaction ID.
 
 New devices receive a two-minute anonymous trial. Trial users can translate on
 one shared phone without creating an account. Inviting another phone requires

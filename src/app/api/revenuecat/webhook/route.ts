@@ -70,8 +70,10 @@ export async function POST(request: Request) {
 
   const creditSeconds = PRODUCT_SECONDS[event.product_id ?? ""];
   const userId = findUserId(event);
+  const supportedStore =
+    event.store === "APP_STORE" || event.store === "PLAY_STORE";
   if (
-    event.store !== "APP_STORE" ||
+    !supportedStore ||
     !creditSeconds ||
     !userId ||
     !event.transaction_id
