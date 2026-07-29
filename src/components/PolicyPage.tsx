@@ -52,7 +52,10 @@ export function PolicyPage({
           <BrandMark />
           <span>Isfaham</span>
         </Link>
-        <p>Real-time voice translation.</p>
+        <p>
+          <span>Real-time voice translation.</span>
+          <small>Designed and developed by Dr. Askar at Automation LLC.</small>
+        </p>
         <div>
           <a href="mailto:support@isfaham.org">support@isfaham.org</a>
           <span>© 2026 Isfaham</span>

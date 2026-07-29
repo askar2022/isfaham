@@ -131,8 +131,16 @@
 
 .policy-footer p {
   color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin: 0;
   text-align: center;
+}
+
+.policy-footer p small {
+  color: #8b8492;
+  font-size: 11px;
 }
 
 .policy-footer > div {
@@ -1637,8 +1645,16 @@ footer {
 
 footer > p {
   color: #8a8492;
+  display: flex;
+  flex-direction: column;
   font-size: 13px;
+  gap: 4px;
   text-align: center;
+}
+
+footer > p small {
+  color: #9a94a1;
+  font-size: 10px;
 }
 
 footer > div {

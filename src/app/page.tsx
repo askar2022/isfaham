@@ -453,7 +453,10 @@ export default function Home() {
           <BrandMark />
           <span>Isfaham</span>
         </a>
-        <p>Understand each other.</p>
+        <p>
+          <span>Understand each other.</span>
+          <small>Designed and developed by Dr. Askar at Automation LLC.</small>
+        </p>
         <div>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
