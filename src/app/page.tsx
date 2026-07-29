@@ -14,6 +14,7 @@ import {
   Waves,
 } from "lucide-react";
 
+import { GuestTrialWidget } from "@/components/GuestTrialWidget";
 import { PilotForm } from "@/components/PilotForm";
 
 const steps = [
@@ -51,7 +52,7 @@ const audiences = [
     title: "Start as a guest",
     text: "Try two minutes of live Somali–English translation before deciding whether to create an account.",
     points: ["Use one phone together", "No payment information", "Private by default"],
-    href: "#download",
+    href: "#try",
     action: "Try 2 minutes free",
   },
   {
@@ -172,7 +173,7 @@ export default function Home() {
           <a href="#for-schools">For schools</a>
           <a href="#download">Get the app</a>
         </nav>
-        <a className="button button-small" href="#download">
+        <a className="button button-small" href="#try">
           Try it free
           <ArrowRight size={16} />
         </a>
@@ -195,7 +196,7 @@ export default function Home() {
             connecting a school with parents.
           </p>
           <div className="hero-actions">
-            <a className="button" href="#download">
+            <a className="button" href="#try">
               Try 2 minutes free
               <ArrowRight size={18} />
             </a>
@@ -241,6 +242,32 @@ export default function Home() {
             Designed for real conversations
           </span>
         </div>
+      </section>
+
+      <section className="guest-trial-section section" id="try">
+        <div className="guest-trial-copy">
+          <span className="section-kicker">Try Isfaham in your browser</span>
+          <h2>Choose a language, then start speaking.</h2>
+          <p>
+            Test two minutes of live Somali–English translation here—no app,
+            account, or payment information needed.
+          </p>
+          <ul>
+            <li>
+              <Check size={15} strokeWidth={3} />
+              Allow microphone access when your browser asks
+            </li>
+            <li>
+              <Check size={15} strokeWidth={3} />
+              One person speaks at a time
+            </li>
+            <li>
+              <Check size={15} strokeWidth={3} />
+              Tap again when you finish speaking
+            </li>
+          </ul>
+        </div>
+        <GuestTrialWidget />
       </section>
 
       <section className="section how" id="how-it-works">
