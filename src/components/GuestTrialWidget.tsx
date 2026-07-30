@@ -3,7 +3,9 @@
 import {
   Languages,
   Loader2,
+  LockKeyhole,
   Mic,
+  RefreshCw,
   RotateCcw,
   Square,
   Volume2,
@@ -36,6 +38,24 @@ function audioDataUrl(base64: string, mimeType = "audio/mpeg") {
   return `data:${mimeType};base64,${base64}`;
 }
 
+function microphonePermissionInstructions() {
+  const userAgent = navigator.userAgent;
+
+  if (/iPhone|iPad|iPod/i.test(userAgent)) {
+    return "Tap aA in the address bar, choose Website Settings, set Microphone to Allow, then reload this page.";
+  }
+  if (/Firefox/i.test(userAgent)) {
+    return "Tap the lock icon beside isfaham.org, open Permissions, and allow Microphone. Then reload this page.";
+  }
+  if (/Edg/i.test(userAgent)) {
+    return "Tap the lock icon beside isfaham.org, open Permissions or Site settings, and set Microphone to Allow. Then reload this page.";
+  }
+  if (/Chrome/i.test(userAgent)) {
+    return "Tap the icon beside isfaham.org, open Permissions, and set Microphone to Allow. Then reload this page.";
+  }
+  return "Open this website’s settings from the address bar, set Microphone to Allow, then reload this page.";
+}
+
 export function GuestTrialWidget() {
   const [source, setSource] = useState<LanguageCode>("so");
   const [recording, setRecording] = useState(false);
@@ -43,6 +63,7 @@ export function GuestTrialWidget() {
   const [duration, setDuration] = useState(0);
   const [balance, setBalance] = useState(120);
   const [error, setError] = useState("");
+  const [microphoneBlocked, setMicrophoneBlocked] = useState(false);
   const [result, setResult] = useState<TranslationResult | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -187,6 +208,7 @@ export function GuestTrialWidget() {
   async function startRecording() {
     if (recording || processing || balance <= 0) return;
     setError("");
+    setMicrophoneBlocked(false);
     setResult(null);
 
     if (
@@ -242,12 +264,15 @@ export function GuestTrialWidget() {
       autoStopRef.current = window.setTimeout(stopRecording, 60_000);
     } catch (recordingError) {
       stopStream();
-      setError(
+      if (
         recordingError instanceof Error &&
-          recordingError.message !== "Permission denied"
-          ? recordingError.message
-          : "Microphone access is needed. Allow it in your browser and try again.",
-      );
+        (recordingError.name === "NotAllowedError" ||
+          recordingError.name === "SecurityError")
+      ) {
+        setMicrophoneBlocked(true);
+        return;
+      }
+      setError("The microphone could not start. Reload the page and try again.");
     }
   }
 
@@ -367,7 +392,27 @@ export function GuestTrialWidget() {
         </button>
       ) : null}
 
-      {error ? (
+      {microphoneBlocked ? (
+        <div className="guest-permission-help" role="alert">
+          <span>
+            <LockKeyhole size={23} />
+          </span>
+          <div>
+            <h3>Microphone is blocked</h3>
+            <p>{microphonePermissionInstructions()}</p>
+            <div className="guest-permission-actions">
+              <button type="button" onClick={startRecording}>
+                <Mic size={15} />
+                Try again
+              </button>
+              <button type="button" onClick={() => window.location.reload()}>
+                <RefreshCw size={15} />
+                Reload page
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : error ? (
         <p className="guest-trial-error" role="alert">
           {error}
         </p>

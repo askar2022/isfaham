@@ -1128,6 +1128,68 @@ h1 em {
   text-align: center;
 }
 
+.guest-permission-help {
+  align-items: flex-start;
+  background: #fff8e9;
+  border: 1px solid #f0d59a;
+  border-radius: 14px;
+  color: #604510;
+  display: flex;
+  gap: 13px;
+  margin-top: 17px;
+  padding: 15px;
+}
+
+.guest-permission-help > span {
+  align-items: center;
+  background: #ffe8b5;
+  border-radius: 50%;
+  display: flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.guest-permission-help h3 {
+  font-family: var(--font-body), sans-serif;
+  font-size: 14px;
+  margin: 1px 0 5px;
+}
+
+.guest-permission-help p {
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.guest-permission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.guest-permission-actions button {
+  align-items: center;
+  background: white;
+  border: 1px solid #ddbf7c;
+  border-radius: 9px;
+  color: #604510;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.guest-permission-actions button:first-child {
+  background: #604510;
+  border-color: #604510;
+  color: white;
+}
+
 .guest-trial-privacy {
   color: #8c8594;
   font-size: 10px;
