@@ -41,6 +41,15 @@ function audioDataUrl(base64: string, mimeType = "audio/mpeg") {
 function microphonePermissionInstructions() {
   const userAgent = navigator.userAgent;
 
+  if (/EdgiOS/i.test(userAgent)) {
+    return "Leave Edge and open iPhone Settings → Apps → Edge. Turn Microphone on, return to Edge, then reload this page.";
+  }
+  if (/CriOS/i.test(userAgent)) {
+    return "Leave Chrome and open iPhone Settings → Apps → Chrome. Turn Microphone on, return to Chrome, then reload this page.";
+  }
+  if (/FxiOS/i.test(userAgent)) {
+    return "Leave Firefox and open iPhone Settings → Apps → Firefox. Turn Microphone on, return to Firefox, then reload this page.";
+  }
   if (/iPhone|iPad|iPod/i.test(userAgent)) {
     return "Tap aA in the address bar, choose Website Settings, set Microphone to Allow, then reload this page.";
   }
