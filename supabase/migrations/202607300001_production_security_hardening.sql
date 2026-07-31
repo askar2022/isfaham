@@ -262,23 +262,31 @@ revoke all on function public.sync_approved_teacher_profile()
 
 -- Defense in depth: these functions are server/trigger-only. Explicit service
 -- grants prevent accidental exposure through a future default grant change.
-grant execute on function public.record_conversation_turn(
-  uuid, bigint, integer, integer, bigint
-) to service_role;
-grant execute on function public.record_translation_failure(uuid)
-  to service_role;
-grant execute on function public.apply_credit_purchase(
-  uuid, bigint, text, integer, jsonb
-) to service_role;
-grant execute on function public.apply_revenuecat_credit_purchase(
-  uuid, bigint, text, integer, jsonb
-) to service_role;
-grant execute on function public.reserve_translation_credit(
-  uuid, bigint, text
-) to service_role;
-grant execute on function public.refund_translation_credit(
-  uuid, bigint, text
-) to service_role;
+-- Missing functions are skipped so this migration stays runnable against a
+-- database where an earlier migration has not been applied yet.
+do $$
+declare
+  signature text;
+  target regprocedure;
+begin
+  foreach signature in array array[
+    'public.record_conversation_turn(uuid, bigint, integer, integer, bigint)',
+    'public.record_translation_failure(uuid)',
+    'public.apply_credit_purchase(uuid, bigint, text, integer, jsonb)',
+    'public.apply_revenuecat_credit_purchase(uuid, bigint, text, integer, jsonb)',
+    'public.reserve_translation_credit(uuid, bigint, text)',
+    'public.refund_translation_credit(uuid, bigint, text)'
+  ]
+  loop
+    target := to_regprocedure(signature);
+    if target is null then
+      raise warning 'Skipped grant for missing function: %', signature;
+      continue;
+    end if;
+    execute format('grant execute on function %s to service_role', target);
+  end loop;
+end;
+$$;
 
 -- Keep the limiter table bounded without requiring an extension or scheduler.
 create index api_rate_limits_updated_idx
