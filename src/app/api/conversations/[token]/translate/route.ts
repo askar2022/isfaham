@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { translateAudio } from "@/lib/azure";
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRequestUser } from "@/lib/supabase/request-user";
 
@@ -41,6 +42,40 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const { token } = await context.params;
+    const clientIp = getClientIp(request);
+    const limits = await Promise.all([
+      consumeRateLimit({
+        scope: "room-translate-token-minute",
+        identifier: token,
+        maximumRequests: 12,
+        windowSeconds: 60,
+      }),
+      consumeRateLimit({
+        scope: "room-translate-token-hour",
+        identifier: token,
+        maximumRequests: 90,
+        windowSeconds: 3_600,
+      }),
+      consumeRateLimit({
+        scope: "room-translate-ip-minute",
+        identifier: clientIp,
+        maximumRequests: 20,
+        windowSeconds: 60,
+      }),
+      consumeRateLimit({
+        scope: "room-translate-ip-hour",
+        identifier: clientIp,
+        maximumRequests: 120,
+        windowSeconds: 3_600,
+      }),
+    ]);
+    if (limits.some((allowed) => !allowed)) {
+      return NextResponse.json(
+        { error: "Too many translation turns. Please wait and try again." },
+        { status: 429 },
+      );
+    }
+
     const form = await request.formData();
     const audio = form.get("audio");
     const durationMs = Number(form.get("durationMs"));
@@ -151,7 +186,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const measuredDurationMs = Math.min(
       60_000,
-      Math.max(500, result.speechDurationMs ?? durationMs),
+      Math.max(500, result.speechDurationMs ?? 60_000),
     );
     const estimatedCostMicrousd = estimateCostMicrousd(
       measuredDurationMs,
@@ -221,12 +256,7 @@ export async function POST(request: Request, context: RouteContext) {
       }
     }
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "The conversation could not be translated.",
-      },
+      { error: "The conversation could not be translated. Please try again." },
       { status: 500 },
     );
   }

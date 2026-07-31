@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isLanguage, synthesizeSpeech } from "@/lib/azure";
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = {
@@ -10,6 +11,28 @@ type RouteContext = {
 export async function POST(request: Request, context: RouteContext) {
   try {
     const { token } = await context.params;
+    const clientIp = getClientIp(request);
+    const limits = await Promise.all([
+      consumeRateLimit({
+        scope: "room-speak-token",
+        identifier: token,
+        maximumRequests: 60,
+        windowSeconds: 3_600,
+      }),
+      consumeRateLimit({
+        scope: "room-speak-ip",
+        identifier: clientIp,
+        maximumRequests: 120,
+        windowSeconds: 3_600,
+      }),
+    ]);
+    if (limits.some((allowed) => !allowed)) {
+      return NextResponse.json(
+        { error: "Audio playback limit reached. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const { messageId } = (await request.json()) as { messageId?: string };
 
     if (!messageId) {

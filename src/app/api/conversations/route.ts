@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import twilio from "twilio";
 
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRequestUser } from "@/lib/supabase/request-user";
 
@@ -65,6 +66,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });
     }
 
+    const [userAllowed, ipAllowed] = await Promise.all([
+      consumeRateLimit({
+        scope: "conversation-create-user",
+        identifier: user.id,
+        maximumRequests: 10,
+        windowSeconds: 3_600,
+      }),
+      consumeRateLimit({
+        scope: "conversation-create-ip",
+        identifier: getClientIp(request),
+        maximumRequests: 20,
+        windowSeconds: 3_600,
+      }),
+    ]);
+    if (!userAllowed || !ipAllowed) {
+      return NextResponse.json(
+        { error: "Too many conversation requests. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const supabase = createAdminClient();
 
     if (isConsumer && user.is_anonymous) {
@@ -76,7 +98,7 @@ export async function POST(request: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("school_id")
+      .select("school_id, email")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -85,6 +107,21 @@ export async function POST(request: Request) {
         { error: "Your teacher profile is not ready." },
         { status: 403 },
       );
+    }
+    if (!isConsumer && profile) {
+      const { data: activeApproval } = await supabase
+        .from("approved_teachers")
+        .select("email")
+        .eq("email", profile.email.toLowerCase())
+        .eq("school_id", profile.school_id)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (!activeApproval) {
+        return NextResponse.json(
+          { error: "Your school access is no longer active." },
+          { status: 403 },
+        );
+      }
     }
 
     const { data, error: conversationError } = await supabase

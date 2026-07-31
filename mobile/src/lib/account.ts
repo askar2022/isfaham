@@ -1,13 +1,9 @@
 import { fetch } from "expo/fetch";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+import { requireApiUrl } from "./config";
 
 export async function deleteAccount(accessToken: string) {
-  if (!apiUrl) {
-    throw new Error("The app is not connected to Isfaham.");
-  }
-
-  const response = await fetch(`${apiUrl}/api/account`, {
+  const response = await fetch(`${requireApiUrl()}/api/account`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${accessToken}` },
   });

@@ -1,8 +1,33 @@
 import { createClient, type User } from "@supabase/supabase-js";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export async function getRequestUser(request: Request): Promise<User | null> {
+async function requireEnabledUser(user: User | null) {
+  if (!user) return null;
+  if (
+    user.banned_until &&
+    new Date(user.banned_until).getTime() > Date.now()
+  ) {
+    return null;
+  }
+
+  const { data, error } = await createAdminClient()
+    .from("user_access_blocks")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (error) {
+    console.error("User access check failed:", { code: error.code });
+    return null;
+  }
+  return data ? null : user;
+}
+
+export async function getRequestUser(
+  request: Request,
+  options: { allowBlocked?: boolean } = {},
+): Promise<User | null> {
   const authorization = request.headers.get("authorization");
   const accessToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];
 
@@ -23,7 +48,7 @@ export async function getRequestUser(request: Request): Promise<User | null> {
     const {
       data: { user },
     } = await supabase.auth.getUser(accessToken);
-    return user;
+    return options.allowBlocked ? user : requireEnabledUser(user);
   }
 
   try {
@@ -31,7 +56,7 @@ export async function getRequestUser(request: Request): Promise<User | null> {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    return user;
+    return options.allowBlocked ? user : requireEnabledUser(user);
   } catch {
     return null;
   }

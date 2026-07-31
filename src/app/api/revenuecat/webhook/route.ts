@@ -68,6 +68,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
+  const sandboxAllowed = process.env.REVENUECAT_ALLOW_SANDBOX === "true";
+  if (event.environment !== "PRODUCTION" && !sandboxAllowed) {
+    console.warn("Rejected non-production RevenueCat event:", {
+      eventId: event.id,
+      environment: event.environment,
+    });
+    return NextResponse.json(
+      { error: "Non-production purchase event rejected." },
+      { status: 400 },
+    );
+  }
+
   const creditSeconds = PRODUCT_SECONDS[event.product_id ?? ""];
   const userId = findUserId(event);
   const supportedStore =

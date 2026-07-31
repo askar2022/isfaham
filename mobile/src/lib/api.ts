@@ -1,6 +1,9 @@
 import { fetch } from "expo/fetch";
 import { File } from "expo-file-system";
 
+import { requireApiUrl } from "./config";
+import { getInstallId } from "./install";
+
 export type LanguageCode = "so" | "en";
 
 export type TranslationResult = {
@@ -12,19 +15,13 @@ export type TranslationResult = {
   target: LanguageCode;
 };
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
-
 export async function translateRecording(
   uri: string,
   source: LanguageCode,
   target: LanguageCode,
   accessToken: string,
 ): Promise<TranslationResult> {
-  if (!apiUrl) {
-    throw new Error(
-      "The app is not connected yet. Add EXPO_PUBLIC_API_URL to mobile/.env.",
-    );
-  }
+  const apiUrl = requireApiUrl();
 
   const form = new FormData();
   form.append("source", source);
@@ -36,7 +33,10 @@ export async function translateRecording(
 
   const response = await fetch(`${apiUrl}/api/translate`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "X-Isfaham-Install-Id": await getInstallId(),
+    },
     body: form,
   });
 

@@ -1,7 +1,7 @@
 import { fetch } from "expo/fetch";
 import { File } from "expo-file-system";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+import { requireApiUrl } from "./config";
 
 export type RemoteMessage = {
   id: string;
@@ -22,13 +22,6 @@ export type RemoteRoom = {
   role: "teacher" | "parent";
   messages: RemoteMessage[];
 };
-
-function requireApiUrl() {
-  if (!apiUrl) {
-    throw new Error("The app is not connected to Isfaham.");
-  }
-  return apiUrl;
-}
 
 async function responseBody<T>(response: Response): Promise<T> {
   const body = (await response.json()) as T & { error?: string };

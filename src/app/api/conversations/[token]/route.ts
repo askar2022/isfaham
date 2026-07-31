@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import twilio from "twilio";
 
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRequestUser } from "@/lib/supabase/request-user";
 
@@ -11,6 +12,27 @@ type RouteContext = {
 export async function GET(request: Request, context: RouteContext) {
   try {
     const { token } = await context.params;
+    const [tokenAllowed, ipAllowed] = await Promise.all([
+      consumeRateLimit({
+        scope: "room-read-token",
+        identifier: token,
+        maximumRequests: 120,
+        windowSeconds: 60,
+      }),
+      consumeRateLimit({
+        scope: "room-read-ip",
+        identifier: getClientIp(request),
+        maximumRequests: 180,
+        windowSeconds: 60,
+      }),
+    ]);
+    if (!tokenAllowed || !ipAllowed) {
+      return NextResponse.json(
+        { error: "Too many room updates. Please wait a moment." },
+        { status: 429 },
+      );
+    }
+
     const admin = createAdminClient();
     const { data: conversation } = await admin
       .from("conversations")
@@ -106,6 +128,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     const userId = (await getRequestUser(request))?.id ?? null;
     if (!userId) {
       return NextResponse.json({ error: "Teacher sign-in required." }, { status: 401 });
+    }
+    const allowed = await consumeRateLimit({
+      scope: "room-status-user",
+      identifier: userId,
+      maximumRequests: 30,
+      windowSeconds: 3_600,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many room status changes. Please try again later." },
+        { status: 429 },
+      );
     }
 
     const admin = createAdminClient();

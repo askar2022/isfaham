@@ -5,6 +5,7 @@ import {
   getCreditPriceId,
   getStripeClient,
 } from "@/lib/stripe";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { getRequestUser } from "@/lib/supabase/request-user";
 
 export async function POST(request: Request) {
@@ -12,6 +13,18 @@ export async function POST(request: Request) {
     const user = await getRequestUser(request);
     if (!user) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    }
+    const allowed = await consumeRateLimit({
+      scope: "credit-checkout-user",
+      identifier: user.id,
+      maximumRequests: 10,
+      windowSeconds: 3_600,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many checkout requests. Please try again later." },
+        { status: 429 },
+      );
     }
 
     const { packageId } = (await request.json()) as { packageId?: string };

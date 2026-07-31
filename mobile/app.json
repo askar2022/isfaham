@@ -22,12 +22,9 @@
         "backgroundColor": "#5B38D2"
       },
       "package": "com.isfaham.app",
+      "allowBackup": false,
       "permissions": [
-        "RECORD_AUDIO",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        "android.permission.RECORD_AUDIO"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -35,6 +32,7 @@
       "expo-audio",
       "expo-font",
       "expo-asset",
+      "expo-secure-store",
       [
         "expo-splash-screen",
         {
@@ -43,7 +41,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#FAF9FD"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "web": {
       "favicon": "./assets/isfaham-icon.png"

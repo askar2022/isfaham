@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   if (!wallet) {
     const { data: createdWallet, error } = await admin
       .from("credit_wallets")
-      .insert({ user_id: user.id })
+      .insert({ user_id: user.id, balance_seconds: 0 })
       .select("balance_seconds, purchased_seconds, used_seconds")
       .single();
     if (error || !createdWallet) {

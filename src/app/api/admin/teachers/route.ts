@@ -21,6 +21,14 @@ async function requireSchoolAdmin() {
     .maybeSingle();
 
   if (!profile?.is_admin) return null;
+  const { data: approval } = await admin
+    .from("approved_teachers")
+    .select("email")
+    .eq("email", profile.email.toLowerCase())
+    .eq("school_id", profile.school_id)
+    .eq("is_active", true)
+    .maybeSingle();
+  if (!approval) return null;
   return { admin, profile };
 }
 
@@ -157,6 +165,12 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const { data: targetProfile } = await context.admin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
     const { data, error } = await context.admin
       .from("approved_teachers")
       .update({ is_active: body.isActive })
@@ -166,6 +180,25 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error) throw error;
+    if (targetProfile) {
+      const { error: authError } =
+        await context.admin.auth.admin.updateUserById(targetProfile.id, {
+          ban_duration: body.isActive ? "none" : "876000h",
+        });
+      if (authError) throw authError;
+
+      const accessBlock = body.isActive
+        ? await context.admin
+            .from("user_access_blocks")
+            .delete()
+            .eq("user_id", targetProfile.id)
+        : await context.admin.from("user_access_blocks").upsert({
+            user_id: targetProfile.id,
+            reason: "school_deactivated",
+            blocked_at: new Date().toISOString(),
+          });
+      if (accessBlock.error) throw accessBlock.error;
+    }
     return NextResponse.json({ teacher: data });
   } catch (error) {
     console.error("Teacher access update failed:", error);

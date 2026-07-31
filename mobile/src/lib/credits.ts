@@ -1,6 +1,6 @@
 import { fetch } from "expo/fetch";
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "");
+import { requireApiUrl } from "./config";
 
 export type CreditPackage = {
   id: string;
@@ -17,11 +17,6 @@ export type CreditBalance = {
   schoolFunded: boolean;
   packages: CreditPackage[];
 };
-
-function requireApiUrl() {
-  if (!apiUrl) throw new Error("The app is not connected to Isfaham.");
-  return apiUrl;
-}
 
 export async function getCreditBalance(accessToken: string) {
   const response = await fetch(`${requireApiUrl()}/api/credits`, {

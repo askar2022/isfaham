@@ -278,6 +278,18 @@ export async function PATCH(request: Request) {
     });
     if (error) throw error;
 
+    const accessBlock = body.disabled
+      ? await context.admin.from("user_access_blocks").upsert({
+          user_id: target.id,
+          reason: "platform_administrator",
+          blocked_at: new Date().toISOString(),
+        })
+      : await context.admin
+          .from("user_access_blocks")
+          .delete()
+          .eq("user_id", target.id);
+    if (accessBlock.error) throw accessBlock.error;
+
     return NextResponse.json({ updated: true, disabled: body.disabled });
   } catch (error) {
     console.error("Personal user access update failed:", error);

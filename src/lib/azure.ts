@@ -46,8 +46,7 @@ function escapeXml(value: string) {
 
 async function requireOk(response: Response, service: string) {
   if (!response.ok) {
-    const detail = await response.text();
-    console.error(`${service} failed (${response.status}): ${detail}`);
+    console.error(`${service} failed with status ${response.status}.`);
     throw new Error(`${service} could not process this conversation.`);
   }
 

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { isLanguage, translateAudio } from "@/lib/azure";
+import {
+  claimAnonymousTrialDevice,
+  consumeRateLimit,
+  getClientIp,
+} from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRequestUser } from "@/lib/supabase/request-user";
 
@@ -14,6 +19,38 @@ export async function POST(request: Request) {
     const user = await getRequestUser(request);
     if (!user) {
       return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    }
+    if (
+      user.is_anonymous &&
+      !(await claimAnonymousTrialDevice(request, user.id))
+    ) {
+      return NextResponse.json(
+        { error: "The free trial has already been used on this device." },
+        { status: 403 },
+      );
+    }
+
+    const [userAllowed, ipAllowed] = await Promise.all([
+      consumeRateLimit({
+        scope: user.is_anonymous
+          ? "translate-anonymous-user"
+          : "translate-user",
+        identifier: user.id,
+        maximumRequests: user.is_anonymous ? 30 : 240,
+        windowSeconds: 3_600,
+      }),
+      consumeRateLimit({
+        scope: "translate-ip",
+        identifier: getClientIp(request),
+        maximumRequests: 120,
+        windowSeconds: 3_600,
+      }),
+    ]);
+    if (!userAllowed || !ipAllowed) {
+      return NextResponse.json(
+        { error: "Translation limit reached. Please try again later." },
+        { status: 429 },
+      );
     }
 
     const form = await request.formData();
@@ -107,12 +144,7 @@ export async function POST(request: Request) {
     }
     console.error("Conversation translation failed:", error);
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "The conversation could not be translated.",
-      },
+      { error: "The conversation could not be translated. Please try again." },
       { status: 500 },
     );
   }

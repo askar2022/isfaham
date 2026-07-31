@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function escapeHtml(value: string) {
@@ -43,6 +45,27 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "One or more fields are too long." },
         { status: 400 },
+      );
+    }
+
+    const [emailAllowed, ipAllowed] = await Promise.all([
+      consumeRateLimit({
+        scope: "pilot-email",
+        identifier: email,
+        maximumRequests: 3,
+        windowSeconds: 86_400,
+      }),
+      consumeRateLimit({
+        scope: "pilot-ip",
+        identifier: getClientIp(request),
+        maximumRequests: 10,
+        windowSeconds: 3_600,
+      }),
+    ]);
+    if (!emailAllowed || !ipAllowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 },
       );
     }
 

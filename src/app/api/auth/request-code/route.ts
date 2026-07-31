@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,6 +22,27 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Enter a valid email address." },
         { status: 400 },
+      );
+    }
+
+    const [emailAllowed, ipAllowed] = await Promise.all([
+      consumeRateLimit({
+        scope: "otp-email",
+        identifier: email,
+        maximumRequests: 3,
+        windowSeconds: 3_600,
+      }),
+      consumeRateLimit({
+        scope: "otp-ip",
+        identifier: getClientIp(request),
+        maximumRequests: 15,
+        windowSeconds: 3_600,
+      }),
+    ]);
+    if (!emailAllowed || !ipAllowed) {
+      return NextResponse.json(
+        { error: "Too many sign-in requests. Please try again later." },
+        { status: 429 },
       );
     }
 
@@ -49,15 +71,7 @@ export async function POST(request: Request) {
     const authorized =
       portal === "platform" ? Boolean(platformAdmin) : Boolean(approvedTeacher);
     if (!authorized) {
-      return NextResponse.json(
-        {
-          error:
-            portal === "platform"
-              ? "This email is not an approved Isfaham platform administrator."
-              : "Sign-in is unavailable. Contact your school administrator.",
-        },
-        { status: 403 },
-      );
+      return NextResponse.json({ ok: true });
     }
 
     const { error: createError } = await admin.auth.admin.createUser({

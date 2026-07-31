@@ -38,6 +38,15 @@ function audioDataUrl(base64: string, mimeType = "audio/mpeg") {
   return `data:${mimeType};base64,${base64}`;
 }
 
+function getInstallId() {
+  const storageKey = "isfaham-install-id";
+  const existing = window.localStorage.getItem(storageKey);
+  if (existing) return existing;
+  const created = crypto.randomUUID();
+  window.localStorage.setItem(storageKey, created);
+  return created;
+}
+
 function microphonePermissionInstructions() {
   const userAgent = navigator.userAgent;
 
@@ -157,6 +166,7 @@ export function GuestTrialWidget() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessTokenRef.current}`,
+          "X-Isfaham-Install-Id": getInstallId(),
         },
         body: form,
       });

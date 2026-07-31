@@ -50,6 +50,7 @@ database or storage.
    - `202607260006_revenuecat_credits.sql`
    - `202607260007_consumer_remote_conversations.sql`
    - `202607260008_platform_administrators.sql`
+   - `202607300001_production_security_hardening.sql`
 2. Insert a school and its approved staff emails into `approved_teachers`.
    Supabase’s Table Editor can import a CSV into this table.
 3. In Supabase Authentication, change the email template to include
@@ -60,7 +61,12 @@ database or storage.
    remains restricted by the approved-teacher table.
 5. Set the Confirm signup, Magic Link, and Change Email Address templates to
    display `{{ .Token }}` so every account flow sends a six-digit code.
-6. Add the Supabase and Twilio variables from `.env.example` to Vercel.
+6. Add the Supabase, Twilio, and `RATE_LIMIT_SECRET` variables from
+   `.env.example` to Vercel. Apply the security-hardening migration before
+   deploying code that depends on its access-block and rate-limit tables.
+7. Keep `REVENUECAT_ALLOW_SANDBOX=false` in production. Set
+   `REQUIRE_TRIAL_DEVICE_ID=true` only after updated mobile builds containing
+   the secure install identifier have reached users.
 
 Staff sign in at `/teacher/login`. They enter their approved email and verify
 the six-digit Supabase code. From `/teacher`, they create a conversation and
