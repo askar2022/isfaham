@@ -16,6 +16,7 @@ import {
 
 import { GuestTrialWidget } from "@/components/GuestTrialWidget";
 import { PilotForm } from "@/components/PilotForm";
+import { SchoolCheckoutForm } from "@/components/SchoolCheckoutForm";
 
 const steps = [
   {
@@ -69,9 +70,9 @@ const audiences = [
     label: "For schools",
     title: "Support every family",
     text: "Give approved staff secure translation tools for conversations with Somali-speaking students and families.",
-    points: ["Approved staff access", "Remote family invitations", "School usage overview"],
-    href: "#for-schools",
-    action: "Explore school access",
+    points: ["$499/month school plan", "Approved staff access", "Remote family invitations"],
+    href: "#pilot",
+    action: "Start school plan",
   },
 ];
 
@@ -469,10 +470,21 @@ export default function Home() {
         </div>
         <h2>Start a better conversation.</h2>
         <p>
-          Join the Isfaham pilot and help shape a translation experience made
-          for your school community.
+          Schools can subscribe for $499/month, or request a short pilot first.
+          After payment, your administrator can sign in and invite staff.
         </p>
-        <PilotForm />
+        <div className="school-signup-grid">
+          <div className="school-signup-panel">
+            <h3>School plan</h3>
+            <p>$499 per month · unlimited school staff translation</p>
+            <SchoolCheckoutForm />
+          </div>
+          <div className="school-signup-panel school-signup-panel-secondary">
+            <h3>Request a pilot</h3>
+            <p>Prefer to talk first? Send a short request and we’ll follow up.</p>
+            <PilotForm />
+          </div>
+        </div>
       </section>
 
       <footer>

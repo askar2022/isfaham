@@ -2,7 +2,7 @@
   "expo": {
     "name": "Isfaham",
     "slug": "isfaham",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "./assets/isfaham-icon-ios.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -41,8 +41,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#FAF9FD"
         }
-      ],
-      "expo-secure-store"
+      ]
     ],
     "web": {
       "favicon": "./assets/isfaham-icon.png"

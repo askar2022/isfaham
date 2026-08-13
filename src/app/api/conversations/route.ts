@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import twilio from "twilio";
 
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+import { assertSchoolSubscriptionActive } from "@/lib/school-billing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getRequestUser } from "@/lib/supabase/request-user";
 
@@ -120,6 +121,16 @@ export async function POST(request: Request) {
         return NextResponse.json(
           { error: "Your school access is no longer active." },
           { status: 403 },
+        );
+      }
+
+      const subscription = await assertSchoolSubscriptionActive(
+        profile.school_id,
+      );
+      if (!subscription.ok) {
+        return NextResponse.json(
+          { error: subscription.reason },
+          { status: 402 },
         );
       }
     }

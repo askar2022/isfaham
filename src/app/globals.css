@@ -1874,6 +1874,44 @@ a.store-button:hover {
   max-width: 570px;
 }
 
+.school-signup-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1.1fr 0.9fr;
+  margin: 0 auto;
+  max-width: 980px;
+  text-align: left;
+  width: 100%;
+}
+
+.school-signup-panel {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.school-signup-panel h3 {
+  color: white;
+  font-size: 1.15rem;
+  margin: 0 0 6px;
+}
+
+.school-signup-panel > p {
+  color: #ddd4ff;
+  font-size: 0.95rem;
+  margin: 0 0 14px;
+}
+
+.school-signup-panel .pilot-form {
+  margin-top: 0;
+  max-width: none;
+}
+
+.school-signup-panel-secondary {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .pilot-form {
   background: white;
   border-radius: 20px;
@@ -2305,6 +2343,10 @@ footer a:hover {
 
   .pilot-form {
     padding: 18px;
+  }
+
+  .school-signup-grid {
+    grid-template-columns: 1fr;
   }
 
   .final-cta {

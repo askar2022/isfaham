@@ -124,17 +124,22 @@ without an account, and all speech from both phones is deducted only from the
 host wallet.
 
 Website packages are currently priced at $8 for one hour, $35 for five hours,
-and $65 for ten hours. Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-and the permanent Stripe Price IDs listed in `.env.example` in Vercel. The
+and $65 for ten hours. Schools subscribe at $499/month through Stripe Checkout
+on the homepage. Configure `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+`STRIPE_PRICE_1_HOUR`, `STRIPE_PRICE_5_HOURS`, `STRIPE_PRICE_10_HOURS`, and
+`STRIPE_PRICE_SCHOOL_MONTHLY` in Vercel (live-mode values in production). The
 Stripe webhook endpoint is:
 
 ```text
 https://isfaham.org/api/stripe/webhook
 ```
 
-Subscribe that webhook to `checkout.session.completed`. Credit updates are
-idempotent and occur only after the signed Stripe webhook confirms payment.
-Never place Stripe secret keys in Expo environment variables.
+Subscribe that webhook to `checkout.session.completed`,
+`customer.subscription.updated`, and `customer.subscription.deleted`. Personal
+credit updates and school provisioning are idempotent and occur only after the
+signed Stripe webhook confirms payment. Never place Stripe secret keys in Expo
+environment variables. Apply migration
+`202608130001_school_stripe_billing.sql` before enabling school checkout.
 
 ### School administrator portal
 

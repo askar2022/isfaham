@@ -24,6 +24,13 @@ export const CREDIT_PACKAGES = [
   },
 ] as const;
 
+export const SCHOOL_MONTHLY_PLAN = {
+  id: "school_monthly",
+  name: "Isfaham School Plan",
+  amountCents: 49_900,
+  interval: "month",
+} as const;
+
 export function getCreditPriceId(packageId: string) {
   const priceIds: Record<string, string | undefined> = {
     starter: process.env.STRIPE_PRICE_1_HOUR,
@@ -31,6 +38,10 @@ export function getCreditPriceId(packageId: string) {
     premium: process.env.STRIPE_PRICE_10_HOURS,
   };
   return priceIds[packageId];
+}
+
+export function getSchoolMonthlyPriceId() {
+  return process.env.STRIPE_PRICE_SCHOOL_MONTHLY;
 }
 
 export function getStripeClient() {
