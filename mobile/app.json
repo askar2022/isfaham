@@ -2,7 +2,7 @@
   "expo": {
     "name": "Isfaham",
     "slug": "isfaham",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "icon": "./assets/isfaham-icon-ios.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.isfaham.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Isfaham uses the microphone to translate conversations between Somali and English.",
+        "NSMicrophoneUsageDescription": "Isfaham uses the microphone so school staff can record English messages that parents receive in Somali.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

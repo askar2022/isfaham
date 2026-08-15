@@ -6,6 +6,7 @@ import {
   getStripeClient,
 } from "@/lib/stripe";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -68,6 +69,30 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "School billing is not configured yet." },
         { status: 503 },
+      );
+    }
+
+    const admin = createAdminClient();
+    const [{ data: existingTeacher }, { data: platformAdmin }] =
+      await Promise.all([
+        admin
+          .from("approved_teachers")
+          .select("email")
+          .eq("email", email)
+          .maybeSingle(),
+        admin
+          .from("platform_administrators")
+          .select("email")
+          .eq("email", email)
+          .maybeSingle(),
+      ]);
+    if (existingTeacher || platformAdmin) {
+      return NextResponse.json(
+        {
+          error:
+            "This email is already registered. Use school sign in, or contact support to change schools.",
+        },
+        { status: 409 },
       );
     }
 

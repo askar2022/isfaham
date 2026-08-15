@@ -3118,6 +3118,84 @@ footer a:hover {
   max-width: 540px;
 }
 
+.parent-listen-page {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(96, 60, 215, 0.12), transparent 30%),
+    #faf9fd;
+  min-height: 100vh;
+  padding: 28px 18px 40px;
+}
+
+.parent-listen-card {
+  background: white;
+  border: 1px solid #e4dfec;
+  border-radius: 24px;
+  margin: 0 auto;
+  max-width: 480px;
+  padding: 28px 22px;
+  text-align: center;
+}
+
+.parent-listen-kicker {
+  color: #5b38d2;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.parent-listen-card h1 {
+  color: var(--ink);
+  font-size: 28px;
+  letter-spacing: -0.8px;
+  margin: 0 0 22px;
+}
+
+.parent-listen-button {
+  width: 100%;
+}
+
+.parent-listen-replay {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.parent-listen-text {
+  background: #faf9fd;
+  border-radius: 16px;
+  margin-top: 22px;
+  padding: 16px;
+  text-align: left;
+}
+
+.parent-listen-text h2 {
+  color: #5b38d2;
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.parent-listen-text p {
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.parent-listen-contact {
+  color: #6f677d;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 18px 0 10px;
+}
+
+.parent-listen-notice {
+  color: #8a8296;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+}
+
 .waiting-logo {
   align-items: center;
   background: var(--purple);

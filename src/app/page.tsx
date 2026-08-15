@@ -2,19 +2,16 @@ import {
   Apple,
   ArrowRight,
   Check,
-  Clock3,
   Languages,
   LockKeyhole,
   Mic,
   Play,
   School,
   Sparkles,
-  UserRound,
   Volume2,
   Waves,
 } from "lucide-react";
 
-import { GuestTrialWidget } from "@/components/GuestTrialWidget";
 import { PilotForm } from "@/components/PilotForm";
 import { SchoolCheckoutForm } from "@/components/SchoolCheckoutForm";
 
@@ -22,55 +19,41 @@ const steps = [
   {
     number: "01",
     icon: Mic,
-    title: "Tap and speak",
-    text: "Choose Somali or English, then speak naturally—one person at a time.",
+    title: "Record in English",
+    text: "School staff enter a parent phone number, then record a short English message.",
   },
   {
     number: "02",
     icon: Languages,
-    title: "Translate instantly",
-    text: "Isfaham turns your words into clear text in the listener’s language.",
+    title: "Preview in Somali",
+    text: "Isfaham shows the English transcript, then creates Somali text and audio for review.",
   },
   {
     number: "03",
     icon: Volume2,
-    title: "Listen and respond",
-    text: "Hear the translation aloud, then switch languages and continue.",
+    title: "Send a secure link",
+    text: "Parents receive an SMS with a private link to listen in Somali—no app required.",
   },
 ];
 
 const benefits = [
-  "Designed for Somali and English conversations",
-  "Simple enough for anyone to use",
-  "Built around school and family communication",
-  "Conversations stay private by default",
+  "English → Somali school voice messages",
+  "Staff review before sending",
+  "Parents listen from a secure SMS link",
+  "Staff phone numbers stay private",
 ];
 
 const audiences = [
   {
-    icon: Clock3,
-    label: "No account required",
-    title: "Start as a guest",
-    text: "Try two minutes of live Somali–English translation before deciding whether to create an account.",
-    points: ["Use one phone together", "No payment information", "Private by default"],
-    href: "#try",
-    action: "Try 2 minutes free",
-  },
-  {
-    icon: UserRound,
-    label: "Free Personal account",
-    title: "Keep translating",
-    text: "Save your translation balance, use Isfaham across devices, and add more time only when you need it.",
-    points: ["Save your remaining minutes", "Invite another phone", "Guest joins free"],
-    href: "#download",
-    action: "Get the app",
-  },
-  {
     icon: School,
     label: "For schools",
-    title: "Support every family",
-    text: "Give approved staff secure translation tools for conversations with Somali-speaking students and families.",
-    points: ["$499/month school plan", "Approved staff access", "Remote family invitations"],
+    title: "Reach families in Somali",
+    text: "Counselors, nurses, transportation, and office staff can send clear Somali voice messages when English → Somali is what works reliably.",
+    points: [
+      "$499/month school plan",
+      "One-way English → Somali messages",
+      "Private staff phone numbers",
+    ],
     href: "#pilot",
     action: "Start school plan",
   },
@@ -170,12 +153,12 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
-          <a href="#ways-to-use">Personal & guest</a>
           <a href="#for-schools">For schools</a>
+          <a href="#pilot">Pricing</a>
           <a href="#download">Get the app</a>
         </nav>
-        <a className="button button-small" href="#try">
-          Try it free
+        <a className="button button-small" href="#pilot">
+          Start school plan
           <ArrowRight size={16} />
         </a>
       </header>
@@ -184,37 +167,37 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow">
             <span className="eyebrow-icon">
-              <Languages size={15} />
+              <School size={15} />
             </span>
-            Live Somali ↔ English translation
+            School-to-family Somali voice messages
           </div>
           <h1>
-            Speak freely. <em>Understand each other.</em>
+            Record in English. <em>Parents hear Somali.</em>
           </h1>
           <p className="hero-lead">
-            Isfaham translates Somali and English conversations in real time,
-            whether you are talking with family, helping a customer, or
-            connecting a school with parents.
+            Isfaham helps schools send clear Somali voice messages to families.
+            Staff record in English, review the message, and parents open a
+            secure SMS link—no two-way live translation required.
           </p>
           <div className="hero-actions">
-            <a className="button" href="#try">
-              Try 2 minutes free
+            <a className="button" href="#pilot">
+              Start school plan
               <ArrowRight size={18} />
             </a>
-            <a className="text-link" href="#for-schools">
-              Isfaham for schools
+            <a className="text-link" href="#how-it-works">
+              See how it works
               <span>↓</span>
             </a>
           </div>
           <div className="hero-proof">
             <div className="avatar-stack" aria-hidden="true">
-              <span>F</span>
+              <span>S</span>
+              <span>N</span>
               <span>T</span>
-              <span>P</span>
             </div>
             <p>
-              <strong>No account required to try</strong>
-              <span>Create a free account when you are ready</span>
+              <strong>Built for school staff</strong>
+              <span>Counselors, nurses, transportation, and office teams</span>
             </p>
           </div>
         </div>
@@ -223,61 +206,35 @@ export default function Home() {
 
       <section className="trust-strip" aria-label="Core product values">
         <div>
-          <Waves size={23} />
+          <Mic size={23} />
           <span>
-            <strong>Natural conversation</strong>
-            One person speaks at a time
+            <strong>English → Somali</strong>
+            Reliable one-way voice messages
           </span>
         </div>
         <div>
           <Languages size={23} />
           <span>
-            <strong>Somali ↔ English</strong>
-            Voice and text translation
+            <strong>Secure SMS link</strong>
+            Parents listen without an app
           </span>
         </div>
         <div>
           <LockKeyhole size={23} />
           <span>
-            <strong>Privacy first</strong>
-            Designed for real conversations
+            <strong>Private staff numbers</strong>
+            School messages, not personal phones
           </span>
         </div>
-      </section>
-
-      <section className="guest-trial-section section" id="try">
-        <div className="guest-trial-copy">
-          <span className="section-kicker">Try Isfaham in your browser</span>
-          <h2>Choose a language, then start speaking.</h2>
-          <p>
-            Test two minutes of live Somali–English translation here—no app,
-            account, or payment information needed.
-          </p>
-          <ul>
-            <li>
-              <Check size={15} strokeWidth={3} />
-              Allow microphone access when your browser asks
-            </li>
-            <li>
-              <Check size={15} strokeWidth={3} />
-              One person speaks at a time
-            </li>
-            <li>
-              <Check size={15} strokeWidth={3} />
-              Tap again when you finish speaking
-            </li>
-          </ul>
-        </div>
-        <GuestTrialWidget />
       </section>
 
       <section className="section how" id="how-it-works">
         <div className="section-heading">
           <span className="section-kicker">How it works</span>
-          <h2>A conversation, not a complicated tool.</h2>
+          <h2>Record. Preview. Send.</h2>
           <p>
-            No training and no confusing menus. Just choose a language, speak,
-            and understand each other.
+            Designed for school routines where staff need to notify families in
+            Somali, and parents can call the school back when needed.
           </p>
         </div>
         <div className="steps-grid">
@@ -296,11 +253,11 @@ export default function Home() {
 
       <section className="audience-section section" id="ways-to-use">
         <div className="section-heading">
-          <span className="section-kicker">One translator, your choice</span>
-          <h2>Start the way that works for you.</h2>
+          <span className="section-kicker">Built for schools</span>
+          <h2>One clear way to reach Somali-speaking families.</h2>
           <p>
-            Try Isfaham without an account, create a Personal account when you
-            want more, or bring secure translation access to your school.
+            Isfaham focuses on the reliable direction: school staff speak
+            English, families receive Somali audio.
           </p>
         </div>
         <div className="audience-grid">
@@ -387,12 +344,11 @@ export default function Home() {
 
       <section className="download-section section" id="download">
         <div className="download-copy">
-          <span className="section-kicker">One app, two platforms</span>
-          <h2>Start free. Create an account when you are ready.</h2>
+          <span className="section-kicker">School staff app</span>
+          <h2>Send Somali voice messages from your phone.</h2>
           <p>
-            Begin with two free translation minutes and no account. A free
-            Personal account lets you keep your balance, invite another phone,
-            and purchase more time when needed.
+            Authorized school staff sign in, record in English, preview Somali,
+            and send parents a secure listening link by SMS.
           </p>
           <div className="store-buttons">
             {iosAppUrl ? (

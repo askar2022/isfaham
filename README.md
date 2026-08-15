@@ -1,7 +1,9 @@
 # Isfaham
 
-Isfaham is a turn-based Somali and English voice translation app for schools
-and families.
+Isfaham is a school-to-family Somali voice messaging app. Authorized staff
+record in English, preview Somali text and audio, then send parents a secure
+SMS listening link. Personal/two-way translation code remains in the repo
+(`mobile/App.legacy.tsx`) but is hidden from the current product surface.
 
 This repository contains:
 

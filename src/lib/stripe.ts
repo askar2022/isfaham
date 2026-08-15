@@ -49,5 +49,12 @@ export function getStripeClient() {
   if (!secretKey) {
     throw new Error("Stripe is not configured.");
   }
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.VERCEL_ENV === "production" &&
+    secretKey.startsWith("sk_test_")
+  ) {
+    throw new Error("Stripe test keys are not allowed in production.");
+  }
   return new Stripe(secretKey);
 }

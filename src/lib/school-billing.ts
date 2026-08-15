@@ -80,6 +80,32 @@ export async function provisionSchoolSubscription(input: {
     return existingBySubscription.id as string;
   }
 
+  const [{ data: existingTeacher }, { data: platformAdmin }] = await Promise.all([
+    admin
+      .from("approved_teachers")
+      .select("email, school_id")
+      .eq("email", email)
+      .maybeSingle(),
+    admin
+      .from("platform_administrators")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle(),
+  ]);
+
+  if (platformAdmin) {
+    throw new Error(
+      "This email belongs to a platform administrator and cannot become a school admin via checkout.",
+    );
+  }
+
+  // Existing staff emails must not be moved to a newly paid school.
+  if (existingTeacher) {
+    throw new Error(
+      "This email is already approved for a school and cannot be reassigned by checkout.",
+    );
+  }
+
   const { data: school, error: schoolError } = await admin
     .from("schools")
     .insert({
@@ -98,16 +124,13 @@ export async function provisionSchoolSubscription(input: {
     throw schoolError ?? new Error("School provisioning failed.");
   }
 
-  const { error: teacherError } = await admin.from("approved_teachers").upsert(
-    {
-      email,
-      school_id: school.id,
-      full_name: adminName,
-      is_admin: true,
-      is_active: true,
-    },
-    { onConflict: "email" },
-  );
+  const { error: teacherError } = await admin.from("approved_teachers").insert({
+    email,
+    school_id: school.id,
+    full_name: adminName,
+    is_admin: true,
+    is_active: true,
+  });
 
   if (teacherError) {
     throw teacherError;
