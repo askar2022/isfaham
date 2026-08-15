@@ -335,9 +335,9 @@ export function SchoolMessenger() {
               </View>
             </View>
 
-            <Text style={styles.heading}>Send a Somali Voice Message</Text>
+            <Text style={styles.heading}>Speak English. Parents hear Somali.</Text>
             <Text style={styles.support}>
-              Record in English. Parents receive Somali audio.
+              Send a Somali voice message.
             </Text>
           </View>
 

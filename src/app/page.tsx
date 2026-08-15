@@ -95,9 +95,9 @@ function AppPreview() {
             <small>School-to-Family Voice Messages</small>
           </div>
         </div>
-        <h3 className="messenger-heading">Send a Somali Voice Message</h3>
+        <h3 className="messenger-heading">Speak English. Parents hear Somali.</h3>
         <p className="messenger-support">
-          Record in English. Parents receive Somali audio.
+          Send a Somali voice message.
         </p>
         <div className="messenger-phone-field">
           <Phone size={14} />
@@ -188,12 +188,12 @@ export default function Home() {
             School-to-family Somali voice messages
           </div>
           <h1>
-            Record in English. <em>Parents hear Somali.</em>
+            Speak English. <em>Parents hear Somali.</em>
           </h1>
           <p className="hero-lead">
-            Isfaham helps schools send clear Somali voice messages to families.
-            Staff record in English, review the message, and parents open a
-            secure SMS link—no two-way live translation required.
+            Schools already leave voice messages. Isfaham makes the difference:
+            staff speak English, and parents hear clear Somali through a secure
+            SMS link.
           </p>
           <div className="hero-actions">
             <a className="button" href="#pilot">
