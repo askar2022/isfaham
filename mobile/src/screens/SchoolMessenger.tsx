@@ -319,23 +319,27 @@ export function SchoolMessenger() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <Image
-              accessibilityLabel="Isfaham logo"
-              // eslint-disable-next-line @typescript-eslint/no-require-imports
-              source={require("../../assets/isfaham-icon.png")}
-              style={styles.logo}
-            />
-            <View>
-              <Text style={styles.brand}>Isfaham</Text>
-              <Text style={styles.subtitle}>School-to-Family Voice Messages</Text>
+          <View style={styles.topBlock}>
+            <View style={styles.header}>
+              <Image
+                accessibilityLabel="Isfaham logo"
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                source={require("../../assets/isfaham-icon.png")}
+                style={styles.logo}
+              />
+              <View>
+                <Text style={styles.brand}>Isfaham</Text>
+                <Text style={styles.subtitle}>
+                  School-to-Family Voice Messages
+                </Text>
+              </View>
             </View>
-          </View>
 
-          <Text style={styles.heading}>Send a Somali Voice Message</Text>
-          <Text style={styles.support}>
-            Record in English. Parents receive Somali audio.
-          </Text>
+            <Text style={styles.heading}>Send a Somali Voice Message</Text>
+            <Text style={styles.support}>
+              Record in English. Parents receive Somali audio.
+            </Text>
+          </View>
 
           {showAuth ? (
             <View style={styles.authCard}>
@@ -378,12 +382,13 @@ export function SchoolMessenger() {
             </View>
           ) : (
             <>
+              <Text style={styles.fieldLabel}>Parent phone number</Text>
               <View style={styles.phoneField}>
                 <Ionicons color="#5B38D2" name="call-outline" size={18} />
                 <TextInput
                   keyboardType="phone-pad"
                   onChangeText={setParentPhone}
-                  placeholder="Parent phone number"
+                  placeholder="(612) 555-0123"
                   placeholderTextColor="#9B93A8"
                   style={styles.phoneInput}
                   value={parentPhone}
@@ -391,7 +396,7 @@ export function SchoolMessenger() {
               </View>
 
               {step === "record" || !message ? (
-                <View style={styles.micBlock}>
+                <View style={styles.micStage}>
                   <Pressable
                     disabled={busy || checkingStaff || recording}
                     onPress={() => void startRecordingFlow()}
@@ -400,7 +405,7 @@ export function SchoolMessenger() {
                     {busy ? (
                       <ActivityIndicator color="#fff" size="large" />
                     ) : (
-                      <Ionicons color="#fff" name="mic" size={64} />
+                      <Ionicons color="#fff" name="mic" size={72} />
                     )}
                   </Pressable>
                   {recording ? (
@@ -482,41 +487,61 @@ export function SchoolMessenger() {
                 </View>
               ) : null}
 
-              <View style={styles.steps}>
-                {(
-                  [
-                    ["1", "Record", "record"],
-                    ["2", "Preview", "preview"],
-                    ["3", "Send", "send"],
-                  ] as const
-                ).map(([number, label, key], index) => {
-                  const active =
-                    step === key ||
-                    (key === "record" && step === "record") ||
-                    (key === "preview" && (step === "preview" || step === "send")) ||
-                    (key === "send" && step === "send");
-                  return (
-                    <View key={key} style={styles.stepItem}>
-                      <View
-                        style={[
-                          styles.stepDot,
-                          active && styles.stepDotActive,
-                          index < 2 && styles.stepSpacer,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.stepNumber,
-                            active && styles.stepNumberActive,
-                          ]}
-                        >
-                          {number}
-                        </Text>
+              <View style={styles.stepsCard}>
+                <View style={styles.stepsTrack}>
+                  {(
+                    [
+                      ["1", "Record", "record"],
+                      ["2", "Preview", "preview"],
+                      ["3", "Send", "send"],
+                    ] as const
+                  ).map(([number, label, key], index, list) => {
+                    const order = { record: 0, preview: 1, send: 2 } as const;
+                    const current = order[step];
+                    const thisOrder = order[key];
+                    const isCurrent = thisOrder === current;
+                    const isDone = thisOrder < current;
+                    return (
+                      <View key={key} style={styles.stepCluster}>
+                        <View style={styles.stepItem}>
+                          <View
+                            style={[
+                              styles.stepCircle,
+                              isDone && styles.stepCircleDone,
+                              isCurrent && styles.stepCircleCurrent,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.stepNumber,
+                                (isCurrent || isDone) && styles.stepNumberActive,
+                              ]}
+                            >
+                              {number}
+                            </Text>
+                          </View>
+                          <Text
+                            style={[
+                              styles.stepLabel,
+                              isCurrent && styles.stepLabelActive,
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        </View>
+                        {index < list.length - 1 ? (
+                          <View style={styles.stepConnector}>
+                            <View style={styles.stepDotMark} />
+                            <View style={styles.stepDotMark} />
+                            <View style={styles.stepDotMark} />
+                            <View style={styles.stepDotMark} />
+                            <View style={styles.stepDotMark} />
+                          </View>
+                        ) : null}
                       </View>
-                      <Text style={styles.stepLabel}>{label}</Text>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
+                </View>
               </View>
 
               <View style={styles.privacy}>
@@ -539,15 +564,19 @@ const styles = StyleSheet.create({
   safe: { backgroundColor: "#FAF9FD", flex: 1 },
   flex: { flex: 1 },
   content: {
+    flexGrow: 1,
+    paddingBottom: 28,
     paddingHorizontal: 22,
-    paddingBottom: 120,
-    paddingTop: 12,
+    paddingTop: 10,
+  },
+  topBlock: {
+    marginBottom: 8,
   },
   header: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
-    marginBottom: 18,
+    marginBottom: 22,
   },
   logo: { borderRadius: 10, height: 34, width: 34 },
   brand: {
@@ -559,20 +588,26 @@ const styles = StyleSheet.create({
     color: "#7C748A",
     fontSize: 11,
     fontWeight: "600",
-    marginTop: 1,
+    marginTop: 3,
   },
   heading: {
     color: "#2C2140",
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: "800",
-    letterSpacing: -0.4,
-    marginBottom: 6,
+    letterSpacing: -0.2,
+    marginBottom: 8,
   },
   support: {
     color: "#7C748A",
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 20,
+  },
+  fieldLabel: {
+    color: "#2C2140",
     fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 18,
+    fontWeight: "800",
+    marginBottom: 8,
   },
   phoneField: {
     alignItems: "center",
@@ -582,69 +617,121 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: "row",
     gap: 10,
-    marginBottom: 28,
+    marginBottom: 8,
     paddingHorizontal: 14,
-    paddingVertical: 2,
+    paddingVertical: 4,
   },
   phoneInput: {
     color: "#2C2140",
     flex: 1,
     fontSize: 15,
-    paddingVertical: 12,
+    paddingVertical: 14,
   },
-  micBlock: { alignItems: "center", marginBottom: 24, marginTop: 8 },
+  micStage: {
+    alignItems: "center",
+    flexGrow: 1,
+    justifyContent: "center",
+    minHeight: 260,
+    paddingVertical: 18,
+  },
   micButton: {
     alignItems: "center",
     backgroundColor: "#5B38D2",
-    borderRadius: 84,
-    elevation: 6,
-    height: 168,
+    borderRadius: 100,
+    elevation: 8,
+    height: 196,
     justifyContent: "center",
     shadowColor: "#5B38D2",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
-    width: 168,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    width: 196,
   },
   micActive: { backgroundColor: "#3F1FA8" },
   micLabel: {
     color: "#5B38D2",
     fontSize: 14,
     fontWeight: "800",
-    marginTop: 14,
+    marginTop: 16,
   },
-  stopButton: { marginTop: 14 },
+  stopButton: { marginTop: 16 },
   stopText: { color: "#B42318", fontSize: 14, fontWeight: "800" },
-  steps: {
-    backgroundColor: "#F3F0F8",
-    borderRadius: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  stepsCard: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E8E1F4",
+    borderRadius: 24,
+    borderWidth: 1,
+    elevation: 3,
     marginBottom: 14,
+    marginTop: 4,
     paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingVertical: 20,
+    shadowColor: "#5B38D2",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
   },
-  stepItem: { alignItems: "center", flex: 1 },
-  stepDot: {
-    alignItems: "center",
-    backgroundColor: "#E6DFF5",
-    borderRadius: 14,
-    height: 28,
+  stepsTrack: {
+    alignItems: "flex-start",
+    flexDirection: "row",
     justifyContent: "center",
-    marginBottom: 6,
-    width: 28,
   },
-  stepDotActive: { backgroundColor: "#5B38D2" },
-  stepSpacer: {},
-  stepNumber: { color: "#5B38D2", fontSize: 12, fontWeight: "800" },
+  stepCluster: {
+    alignItems: "center",
+    flexDirection: "row",
+  },
+  stepItem: {
+    alignItems: "center",
+    minWidth: 64,
+  },
+  stepConnector: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+    marginHorizontal: 6,
+    marginTop: 15,
+  },
+  stepDotMark: {
+    backgroundColor: "#C9BEDD",
+    borderRadius: 3,
+    height: 4,
+    width: 4,
+  },
+  stepCircle: {
+    alignItems: "center",
+    backgroundColor: "#F3EEFA",
+    borderColor: "#D9CEF0",
+    borderRadius: 17,
+    borderWidth: 1.5,
+    height: 34,
+    justifyContent: "center",
+    marginBottom: 8,
+    width: 34,
+  },
+  stepCircleDone: {
+    backgroundColor: "#5B38D2",
+    borderColor: "#5B38D2",
+  },
+  stepCircleCurrent: {
+    backgroundColor: "#5B38D2",
+    borderColor: "#5B38D2",
+    elevation: 3,
+    shadowColor: "#5B38D2",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+  },
+  stepNumber: { color: "#5B38D2", fontSize: 13, fontWeight: "800" },
   stepNumberActive: { color: "#fff" },
-  stepLabel: { color: "#6F677D", fontSize: 11, fontWeight: "700" },
+  stepLabel: { color: "#7C748A", fontSize: 12, fontWeight: "700" },
+  stepLabelActive: { color: "#5B38D2" },
   privacy: {
     alignItems: "center",
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
-    marginTop: 4,
+    marginBottom: 8,
+    marginTop: 2,
   },
   privacyText: { color: "#8A8296", fontSize: 11, fontWeight: "600" },
   previewCard: {
