@@ -16,7 +16,7 @@ import { supabase } from "../lib/supabase";
 export function MessageHistory() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [messages, setMessages] = useState<VoiceMessageHistoryItem[]>([]);
 
   useEffect(() => {
@@ -37,12 +37,14 @@ export function MessageHistory() {
     if (!session || session.user.is_anonymous) {
       setMessages([]);
       setLoading(false);
-      setError("Sign in from New Message to view history.");
+      setError("");
+      setInfo("Sign in from New Message to view history.");
       return;
     }
     try {
       setLoading(true);
       setError("");
+      setInfo("");
       const result = await listVoiceMessages(session.access_token);
       setMessages(result.messages);
     } catch (loadError) {
@@ -72,8 +74,9 @@ export function MessageHistory() {
         <ActivityIndicator color="#5B38D2" style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
+          {info ? <Text style={styles.info}>{info}</Text> : null}
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {!error && messages.length === 0 ? (
+          {!error && !info && messages.length === 0 ? (
             <Text style={styles.empty}>No messages yet.</Text>
           ) : null}
           {messages.map((message) => (
@@ -114,11 +117,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingTop: 12,
   },
-  title: { color: "#2C2140", fontSize: 28, fontWeight: "800" },
-  refresh: { color: "#5B38D2", fontWeight: "800" },
+  title: { color: "#2C2140", fontSize: 22, fontWeight: "800" },
+  refresh: { color: "#5B38D2", fontSize: 13, fontWeight: "800" },
   content: { padding: 22, paddingBottom: 120 },
-  empty: { color: "#7C748A", marginTop: 24, textAlign: "center" },
-  error: { color: "#B42318", fontWeight: "700", marginBottom: 12 },
+  empty: { color: "#7C748A", fontSize: 13, marginTop: 24, textAlign: "center" },
+  info: {
+    color: "#7C748A",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  error: {
+    color: "#B42318",
+    fontSize: 13,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
   card: {
     backgroundColor: "#fff",
     borderColor: "#E4DFEC",
@@ -127,7 +143,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 14,
   },
-  cardTitle: { color: "#2C2140", fontSize: 16, fontWeight: "800" },
-  meta: { color: "#7C748A", fontSize: 13, marginTop: 4 },
-  body: { color: "#2C2140", marginTop: 10 },
+  cardTitle: { color: "#2C2140", fontSize: 14, fontWeight: "800" },
+  meta: { color: "#7C748A", fontSize: 12, marginTop: 4 },
+  body: { color: "#2C2140", fontSize: 13, marginTop: 10 },
 });

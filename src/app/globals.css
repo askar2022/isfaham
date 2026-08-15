@@ -545,6 +545,242 @@ h1 em {
   z-index: 2;
 }
 
+.phone-messenger {
+  background: #faf9fd;
+  display: flex;
+  flex-direction: column;
+  min-height: 620px;
+  padding-bottom: 12px;
+  transform: rotate(0deg);
+}
+
+.messenger-brand {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.messenger-brand .brand-mark {
+  border-radius: 10px;
+  height: 28px;
+  width: 28px;
+}
+
+.messenger-brand strong {
+  color: #5b38d2;
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.messenger-brand small {
+  color: #7c748a;
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.messenger-heading {
+  color: #2c2140;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+  margin: 0 0 6px;
+}
+
+.messenger-support {
+  color: #7c748a;
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0 0 12px;
+}
+
+.messenger-phone-field {
+  align-items: center;
+  background: white;
+  border: 1px solid #e4dfec;
+  border-radius: 12px;
+  color: #9b93a8;
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 11px 12px;
+}
+
+.messenger-phone-field svg {
+  color: #5b38d2;
+}
+
+.messenger-mic {
+  align-items: center;
+  align-self: center;
+  background: #5b38d2;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 14px 28px rgba(91, 56, 210, 0.32);
+  color: white;
+  cursor: default;
+  display: flex;
+  height: 118px;
+  justify-content: center;
+  width: 118px;
+}
+
+.messenger-mic-label {
+  color: #5b38d2;
+  font-size: 12px;
+  font-weight: 800;
+  margin: 12px 0 16px;
+  text-align: center;
+}
+
+.messenger-steps {
+  background: #f3f0f8;
+  border-radius: 14px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 12px;
+  padding: 10px 8px;
+}
+
+.messenger-step {
+  align-items: center;
+  color: #6f677d;
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 5px;
+}
+
+.messenger-step span {
+  align-items: center;
+  background: #e6dff5;
+  border-radius: 50%;
+  color: #5b38d2;
+  display: flex;
+  font-size: 11px;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.messenger-step.active span {
+  background: #5b38d2;
+  color: white;
+}
+
+.messenger-privacy {
+  align-items: center;
+  color: #8a8296;
+  display: flex;
+  font-size: 10px;
+  font-weight: 600;
+  gap: 6px;
+  justify-content: center;
+  margin: 0 0 14px;
+}
+
+.messenger-privacy svg {
+  color: #5b38d2;
+}
+
+.messenger-nav {
+  border-top: 1px solid #ede8f5;
+  display: grid;
+  gap: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.messenger-nav span {
+  align-items: center;
+  color: #9b93a8;
+  display: flex;
+  flex-direction: column;
+  font-size: 9px;
+  font-weight: 700;
+  gap: 3px;
+}
+
+.messenger-nav span.active {
+  color: #5b38d2;
+}
+
+.school-card-messenger {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.school-big-mic {
+  align-items: center;
+  background: #5b38d2;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 16px 30px rgba(91, 56, 210, 0.28);
+  color: white;
+  display: flex;
+  height: 96px;
+  justify-content: center;
+  margin: 8px 0 2px;
+  width: 96px;
+}
+
+.school-card-messenger > small {
+  color: #5b38d2;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.school-mini-steps {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.school-mini-steps span {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  color: #ddd4ff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
+.school-mini-steps span.active {
+  background: white;
+  color: #5b38d2;
+}
+
+.mini-phone-messenger {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.mini-mic-large {
+  align-items: center;
+  background: #5b38d2;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  height: 88px;
+  justify-content: center;
+  margin: 18px 0 10px;
+  width: 88px;
+}
+
 .phone::before {
   background: #201b2a;
   border-radius: 0 0 10px 10px;

@@ -5,11 +5,11 @@ import {
   Languages,
   LockKeyhole,
   Mic,
+  Phone,
   Play,
   School,
-  Sparkles,
+  ShieldCheck,
   Volume2,
-  Waves,
 } from "lucide-react";
 
 import { PilotForm } from "@/components/PilotForm";
@@ -71,12 +71,15 @@ function BrandMark() {
   );
 }
 
-function ConversationPreview() {
+function AppPreview() {
   return (
     <div className="preview-wrap">
       <div className="orbit orbit-one" />
       <div className="orbit orbit-two" />
-      <div className="phone" aria-label="Preview of the Isfaham conversation app">
+      <div
+        className="phone phone-messenger"
+        aria-label="Preview of the Isfaham school messaging app"
+      >
         <div className="phone-top">
           <span>9:41</span>
           <div className="phone-status">
@@ -85,56 +88,69 @@ function ConversationPreview() {
             <span />
           </div>
         </div>
-        <div className="app-brand">
+        <div className="messenger-brand">
           <BrandMark />
-          <strong>Isfaham</strong>
-        </div>
-        <div className="live-label">
-          <span className="live-dot" />
-          Live conversation
-        </div>
-        <div className="message message-somali">
-          <small>Somali</small>
-          <p>Ma ku hadli karnaa Af-Soomaali?</p>
-          <div className="message-meta">
-            <Waves size={16} />
-            <span>Just now</span>
+          <div>
+            <strong>Isfaham</strong>
+            <small>School-to-Family Voice Messages</small>
           </div>
         </div>
-        <div className="translation-line">
-          <Sparkles size={16} />
-          <span>Translated to English</span>
+        <h3 className="messenger-heading">Send a Somali Voice Message</h3>
+        <p className="messenger-support">
+          Record in English. Parents receive Somali audio.
+        </p>
+        <div className="messenger-phone-field">
+          <Phone size={14} />
+          <span>Parent phone number</span>
         </div>
-        <div className="message message-english">
-          <small>English</small>
-          <p>Can we speak in Somali?</p>
-          <button type="button" aria-label="Play English translation">
-            <Play size={16} fill="currentColor" />
-            Listen
-          </button>
+        <button
+          type="button"
+          className="messenger-mic"
+          aria-label="Tap to record in English"
+        >
+          <Mic size={42} />
+        </button>
+        <p className="messenger-mic-label">Tap to Record in English</p>
+        <div className="messenger-steps">
+          <div className="messenger-step active">
+            <span>1</span>
+            Record
+          </div>
+          <div className="messenger-step">
+            <span>2</span>
+            Preview
+          </div>
+          <div className="messenger-step">
+            <span>3</span>
+            Send
+          </div>
         </div>
-        <div className="speaker-switch">
-          <button type="button" className="language-pill">
-            <span>SO</span>
-            Somali
-          </button>
-          <button type="button" className="mic-button" aria-label="Start speaking">
-            <Mic size={27} />
-          </button>
-          <button type="button" className="language-pill">
-            <span>EN</span>
-            English
-          </button>
+        <p className="messenger-privacy">
+          <ShieldCheck size={13} />
+          Your personal phone number stays private.
+        </p>
+        <div className="messenger-nav">
+          <span className="active">
+            <Mic size={16} />
+            New Message
+          </span>
+          <span>
+            <Languages size={14} />
+            History
+          </span>
+          <span>
+            <School size={14} />
+            Account
+          </span>
         </div>
-        <p className="tap-hint">Tap the microphone to speak</p>
       </div>
       <div className="floating-note note-top">
-        <Volume2 size={19} />
-        <span>Clear voice playback</span>
+        <Mic size={19} />
+        <span>Large English record button</span>
       </div>
       <div className="floating-note note-bottom">
         <LockKeyhole size={19} />
-        <span>Private by default</span>
+        <span>Private staff numbers</span>
       </div>
     </div>
   );
@@ -201,7 +217,7 @@ export default function Home() {
             </p>
           </div>
         </div>
-        <ConversationPreview />
+        <AppPreview />
       </section>
 
       <section className="trust-strip" aria-label="Core product values">
@@ -292,38 +308,28 @@ export default function Home() {
 
       <section className="school-section" id="for-schools">
         <div className="school-visual">
-          <div className="school-card">
+          <div className="school-card school-card-messenger">
             <div className="school-icon">
-              <School size={34} />
+              <Mic size={34} />
             </div>
-            <span>Family–teacher conversation</span>
-            <div className="conversation-bars" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
-            <div className="connected-people">
-              <span>SO</span>
-              <div>
-                <i />
-                <Languages size={18} />
-                <i />
-              </div>
-              <span>EN</span>
+            <span>School voice message</span>
+            <button type="button" className="school-big-mic" aria-hidden="true">
+              <Mic size={36} />
+            </button>
+            <small>Tap to Record in English</small>
+            <div className="school-mini-steps">
+              <span className="active">1 Record</span>
+              <span>2 Preview</span>
+              <span>3 Send</span>
             </div>
           </div>
         </div>
         <div className="school-copy">
-          <span className="section-kicker">Made for meaningful moments</span>
+          <span className="section-kicker">Made for school routines</span>
           <h2>Help every parent take part in their child’s education.</h2>
           <p>
-            From quick front-office questions to parent-teacher conferences,
-            Isfaham helps schools communicate more clearly with Somali-speaking
-            families.
+            Staff leave a clear Somali voice message. Parents listen from a
+            secure link, then call the school back when they need to talk.
           </p>
           <ul>
             {benefits.map((benefit) => (
@@ -336,7 +342,7 @@ export default function Home() {
             ))}
           </ul>
           <a className="button button-light" href="#pilot">
-            Request a school pilot
+            Start school plan
             <ArrowRight size={18} />
           </a>
         </div>
@@ -388,23 +394,16 @@ export default function Home() {
           </div>
         </div>
         <div className="download-device" aria-hidden="true">
-          <div className="mini-phone">
+          <div className="mini-phone mini-phone-messenger">
             <div className="mini-phone-brand">
               <BrandMark />
               <strong>Isfaham</strong>
             </div>
-            <span className="mini-ready">Ready to listen</span>
-            <div className="mini-language">
-              <span>SO</span>
-              <i />
-              <Languages size={17} />
-              <i />
-              <span>EN</span>
+            <span className="mini-ready">New Message</span>
+            <div className="mini-mic mini-mic-large">
+              <Mic size={36} />
             </div>
-            <div className="mini-mic">
-              <Mic size={27} />
-            </div>
-            <small>Hold to speak</small>
+            <small>Tap to Record in English</small>
           </div>
         </div>
       </section>
@@ -415,8 +414,8 @@ export default function Home() {
           “Isfaham” means <em>understand each other.</em>
         </blockquote>
         <p>
-          We are building technology around a simple belief: language should
-          never stand between people who need to understand each other.
+          We help schools reach Somali-speaking families with clear voice
+          messages, so language is not a barrier to staying connected.
         </p>
       </section>
 
@@ -424,15 +423,15 @@ export default function Home() {
         <div className="cta-mark">
           <BrandMark />
         </div>
-        <h2>Start a better conversation.</h2>
+        <h2>Start sending Somali voice messages.</h2>
         <p>
-          Schools can subscribe for $499/month, or request a short pilot first.
+          Schools subscribe for $499/month, or request a short pilot first.
           After payment, your administrator can sign in and invite staff.
         </p>
         <div className="school-signup-grid">
           <div className="school-signup-panel">
             <h3>School plan</h3>
-            <p>$499 per month · unlimited school staff translation</p>
+            <p>$499 per month · school staff voice messaging</p>
             <SchoolCheckoutForm />
           </div>
           <div className="school-signup-panel school-signup-panel-secondary">
@@ -449,7 +448,7 @@ export default function Home() {
           <span>Isfaham</span>
         </a>
         <p>
-          <span>Understand each other.</span>
+          <span>School-to-family Somali voice messages.</span>
           <small>Designed and developed by Dr. Askar at Automation LLC.</small>
         </p>
         <div>

@@ -48,7 +48,7 @@ function BottomNavigation({
               <Ionicons
                 color={selected ? "#5B38D2" : "#9B93A8"}
                 name={tab.icon}
-                size={22}
+                size={tab.id === "message" ? 28 : 22}
               />
               <Text style={[styles.navLabel, selected && styles.navLabelActive]}>
                 {tab.label}
@@ -148,37 +148,37 @@ const styles = StyleSheet.create({
   navItem: { alignItems: "center", minWidth: 96, paddingVertical: 4 },
   navLabel: {
     color: "#9B93A8",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
-    marginTop: 4,
+    marginTop: 3,
   },
   navLabelActive: { color: "#5B38D2" },
   accountSafe: { flex: 1, paddingHorizontal: 22, paddingTop: 18 },
   accountTitle: {
     color: "#2C2140",
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "800",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   accountCopy: {
     color: "#7C748A",
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 18,
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 16,
   },
   accountMeta: {
     color: "#2C2140",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  accountHint: { color: "#7C748A", lineHeight: 20 },
+  accountHint: { color: "#7C748A", fontSize: 13, lineHeight: 18 },
   signOut: {
     alignSelf: "flex-start",
     backgroundColor: "#5B38D2",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
   },
-  signOutText: { color: "#fff", fontWeight: "800" },
+  signOutText: { color: "#fff", fontSize: 13, fontWeight: "800" },
 });
