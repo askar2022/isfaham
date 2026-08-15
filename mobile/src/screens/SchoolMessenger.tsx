@@ -9,7 +9,7 @@ import {
 } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
 import type { Session } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -39,6 +39,16 @@ import {
 
 type Step = "record" | "preview" | "send";
 
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatElapsed(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
 export function SchoolMessenger() {
   const [session, setSession] = useState<Session | null>(null);
   const [isStaff, setIsStaff] = useState(false);
@@ -56,10 +66,25 @@ export function SchoolMessenger() {
   const [somaliText, setSomaliText] = useState("");
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [listenUrl, setListenUrl] = useState("");
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const countdownActive = useRef(false);
 
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 200);
   const player = useAudioPlayer(null);
+  const recording = recorderState.isRecording;
+
+  useEffect(() => {
+    if (!recording) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setElapsedSeconds((value) => value + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [recording]);
 
   useEffect(() => {
     if (!supabase) {
@@ -161,6 +186,9 @@ export function SchoolMessenger() {
 
   async function startRecordingFlow() {
     setError("");
+    if (countdown !== null || countdownActive.current || recording) {
+      return;
+    }
     if (!parentPhone.trim()) {
       setError("Enter the parent’s phone number first.");
       return;
@@ -178,6 +206,7 @@ export function SchoolMessenger() {
 
     try {
       setBusy(true);
+      countdownActive.current = true;
       await setAudioModeAsync({
         allowsRecording: true,
         playsInSilentMode: true,
@@ -192,24 +221,39 @@ export function SchoolMessenger() {
       setAudioDataUri(null);
       setListenUrl("");
       setStep("record");
+      setBusy(false);
+
+      for (const value of [3, 2, 1]) {
+        if (!countdownActive.current) {
+          return;
+        }
+        setCountdown(value);
+        await wait(1000);
+      }
+      setCountdown(null);
       await recorder.prepareToRecordAsync();
       recorder.record();
+      setElapsedSeconds(0);
     } catch (startError) {
       setError(
         startError instanceof Error
           ? startError.message
           : "Unable to start recording.",
       );
+      setCountdown(null);
     } finally {
+      countdownActive.current = false;
       setBusy(false);
     }
   }
 
   async function stopAndTranscribe() {
-    if (!session || !message) return;
+    if (!session || !message || busy) return;
     try {
       setBusy(true);
       setError("");
+      setCountdown(null);
+      countdownActive.current = false;
       await recorder.stop();
       const uri = recorder.uri;
       if (!uri) {
@@ -232,6 +276,17 @@ export function SchoolMessenger() {
     } finally {
       setBusy(false);
     }
+  }
+
+  function onMainButtonPress() {
+    if (countdown !== null) {
+      return;
+    }
+    if (recording) {
+      void stopAndTranscribe();
+      return;
+    }
+    void startRecordingFlow();
   }
 
   async function buildSomaliPreview() {
@@ -305,9 +360,10 @@ export function SchoolMessenger() {
     setListenUrl("");
     setStep("record");
     setError("");
+    setCountdown(null);
+    setElapsedSeconds(0);
+    countdownActive.current = false;
   }
-
-  const recording = recorderState.isRecording;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -397,24 +453,39 @@ export function SchoolMessenger() {
 
               {step === "record" || !message ? (
                 <View style={styles.micStage}>
+                  {countdown !== null ? (
+                    <Text style={styles.countdownHint}>Get ready…</Text>
+                  ) : null}
                   <Pressable
-                    disabled={busy || checkingStaff || recording}
-                    onPress={() => void startRecordingFlow()}
-                    style={[styles.micButton, recording && styles.micActive]}
+                    disabled={busy || checkingStaff || countdown !== null}
+                    onPress={onMainButtonPress}
+                    style={[
+                      styles.micButton,
+                      recording && styles.stopButtonActive,
+                      countdown !== null && styles.countdownButton,
+                    ]}
                   >
-                    {busy ? (
+                    {busy && !recording && countdown === null ? (
                       <ActivityIndicator color="#fff" size="large" />
+                    ) : countdown !== null ? (
+                      <Text style={styles.countdownNumber}>{countdown}</Text>
+                    ) : recording ? (
+                      <View style={styles.stopSquare} />
                     ) : (
                       <Ionicons color="#fff" name="mic" size={72} />
                     )}
                   </Pressable>
-                  {recording ? (
-                    <Pressable
-                      onPress={() => void stopAndTranscribe()}
-                      style={styles.stopButton}
-                    >
-                      <Text style={styles.stopText}>Tap to stop & review</Text>
-                    </Pressable>
+                  {countdown !== null ? (
+                    <Text style={styles.micLabel}>Starting in {countdown}…</Text>
+                  ) : recording ? (
+                    <>
+                      <Text style={styles.recordingTimer}>
+                        {formatElapsed(elapsedSeconds)}
+                      </Text>
+                      <Text style={styles.stopText}>
+                        Recording… Tap red button to stop
+                      </Text>
+                    </>
                   ) : (
                     <Text style={styles.micLabel}>Tap to Record in English</Text>
                   )}
@@ -439,7 +510,7 @@ export function SchoolMessenger() {
                       <ActivityIndicator color="#fff" />
                     ) : (
                       <Text style={styles.primaryButtonText}>
-                        Create Somali preview
+                        Continue to Somali
                       </Text>
                     )}
                   </Pressable>
@@ -464,7 +535,7 @@ export function SchoolMessenger() {
                     style={styles.secondaryButton}
                   >
                     <Text style={styles.secondaryButtonText}>
-                      Preview Somali audio
+                      Listen in Somali
                     </Text>
                   </Pressable>
                   <Pressable
@@ -648,14 +719,49 @@ const styles = StyleSheet.create({
     width: 196,
   },
   micActive: { backgroundColor: "#3F1FA8" },
+  stopButtonActive: {
+    backgroundColor: "#D92D20",
+    shadowColor: "#D92D20",
+  },
+  countdownButton: {
+    backgroundColor: "#5B38D2",
+  },
+  countdownNumber: {
+    color: "#fff",
+    fontSize: 72,
+    fontWeight: "800",
+  },
+  countdownHint: {
+    color: "#5B38D2",
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 12,
+  },
+  stopSquare: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    height: 42,
+    width: 42,
+  },
+  recordingTimer: {
+    color: "#D92D20",
+    fontSize: 36,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginTop: 18,
+  },
   micLabel: {
     color: "#5B38D2",
     fontSize: 14,
     fontWeight: "800",
     marginTop: 16,
   },
-  stopButton: { marginTop: 16 },
-  stopText: { color: "#B42318", fontSize: 14, fontWeight: "800" },
+  stopText: {
+    color: "#D92D20",
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 6,
+  },
   stepsCard: {
     backgroundColor: "#FFFFFF",
     borderColor: "#E8E1F4",
