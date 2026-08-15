@@ -17,6 +17,7 @@ export function MessageHistory() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [info, setInfo] = useState("");
+  const [error, setError] = useState("");
   const [messages, setMessages] = useState<VoiceMessageHistoryItem[]>([]);
 
   useEffect(() => {
