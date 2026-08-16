@@ -3,7 +3,6 @@ import type { Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   AppState,
   KeyboardAvoidingView,
   Platform,
@@ -16,25 +15,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import {
-  CreditBalance,
-  CreditPackage,
-  getCreditBalance,
-} from "../lib/credits";
-import {
-  getStoreCreditProducts,
-  isCancelledPurchase,
-  logOutPurchases,
-  purchaseStoreCredits,
-  type StoreCreditProduct,
-} from "../lib/iap";
+import { CreditBalance, getCreditBalance } from "../lib/credits";
 import { supabase } from "../lib/supabase";
-
-const STORE_PRODUCT_BY_PACKAGE: Record<string, string> = {
-  starter: "isfaham_1_hour",
-  standard: "isfaham_5_hours",
-  premium: "isfaham_10_hours",
-};
 
 function formatBalance(seconds: number) {
   const hours = Math.floor(seconds / 3600);
@@ -70,8 +52,6 @@ function CreditWallet({
 }) {
   const [balance, setBalance] = useState<CreditBalance | null>(null);
   const [loading, setLoading] = useState(true);
-  const [buying, setBuying] = useState<string | null>(null);
-  const [storeProducts, setStoreProducts] = useState<StoreCreditProduct[]>([]);
   const [error, setError] = useState("");
 
   const refresh = useCallback(async () => {
@@ -100,77 +80,6 @@ function CreditWallet({
       listener.remove();
     };
   }, [refresh]);
-
-  useEffect(() => {
-    if (Platform.OS !== "ios" && Platform.OS !== "android") return;
-    let active = true;
-    void getStoreCreditProducts(session.user.id)
-      .then((products) => {
-        if (active) setStoreProducts(products);
-      })
-      .catch((productError) => {
-        if (active) {
-          setError(
-            productError instanceof Error
-              ? productError.message
-              : "In-app purchases are unavailable.",
-          );
-        }
-      });
-    return () => {
-      active = false;
-    };
-  }, [session.user.id]);
-
-  async function waitForPurchasedCredits(previousBalance: number) {
-    for (let attempt = 0; attempt < 6; attempt += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1_500));
-      const next = await getCreditBalance(session.access_token);
-      setBalance(next);
-      if (next.balanceSeconds > previousBalance) return true;
-    }
-    return false;
-  }
-
-  async function buy(creditPackage: CreditPackage) {
-    setBuying(creditPackage.id);
-    setError("");
-    try {
-      const productId = STORE_PRODUCT_BY_PACKAGE[creditPackage.id];
-      const product = storeProducts.find(
-        (candidate) => candidate.identifier === productId,
-      );
-      if (!product) {
-        throw new Error(
-          Platform.OS === "ios"
-            ? "This Apple purchase is unavailable."
-            : "This Google Play purchase is unavailable.",
-        );
-      }
-
-      await purchaseStoreCredits(session.user.id, product);
-      const updated = await waitForPurchasedCredits(
-        balance?.balanceSeconds ?? 0,
-      );
-      if (!updated) {
-        Alert.alert(
-          "Purchase confirmed",
-          `${
-            Platform.OS === "ios" ? "Apple" : "Google Play"
-          } confirmed your purchase. Your balance will update shortly.`,
-        );
-      }
-    } catch (checkoutError) {
-      if (isCancelledPurchase(checkoutError)) return;
-      setError(
-        checkoutError instanceof Error
-          ? checkoutError.message
-          : "Checkout is unavailable.",
-      );
-    } finally {
-      setBuying(null);
-    }
-  }
 
   return (
     <SafeAreaView style={styles.page}>
@@ -224,69 +133,17 @@ function CreditWallet({
             </Pressable>
           )}
 
-          {!balance?.schoolFunded && (
-            <>
-              <Text style={styles.sectionTitle}>Reload credits</Text>
-              <Text style={styles.sectionDescription}>
-                {Platform.OS === "ios"
-                  ? "Purchase securely with your Apple ID. Apple displays the price for your region."
-                  : "Purchase securely with Google Play. Google displays the price for your region."}
-              </Text>
-              <View style={styles.packages}>
-                {balance?.packages.map((creditPackage) => (
-                  (() => {
-                    const storeProduct = storeProducts.find(
-                      (product) =>
-                        product.identifier ===
-                        STORE_PRODUCT_BY_PACKAGE[creditPackage.id],
-                    );
-                    const unavailable = !storeProduct;
-                    return (
-                  <Pressable
-                    disabled={Boolean(buying) || unavailable}
-                    key={creditPackage.id}
-                    onPress={() => void buy(creditPackage)}
-                    style={({ pressed }) => [
-                      styles.packageCard,
-                      unavailable && styles.disabled,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View>
-                      <Text style={styles.packageName}>
-                        {creditPackage.name}
-                      </Text>
-                      <Text style={styles.packageHours}>
-                        {creditPackage.hours}{" "}
-                        {creditPackage.hours === 1 ? "hour" : "hours"}
-                      </Text>
-                    </View>
-                    {buying === creditPackage.id ? (
-                      <ActivityIndicator color="#5B38D2" />
-                    ) : (
-                      <Text style={styles.packagePrice}>
-                        {storeProduct?.priceString ?? "Unavailable"}
-                      </Text>
-                    )}
-                  </Pressable>
-                    );
-                  })()
-                ))}
-              </View>
-              <Text style={styles.disclosure}>
-                {Platform.OS === "ios"
-                  ? "Payment is charged to your Apple ID. Translation Credits are consumable and can be purchased again."
-                  : "Payment is charged through Google Play. Translation Credits are consumable and can be purchased again."}
-              </Text>
-            </>
-          )}
+          {!balance?.schoolFunded ? (
+            <Text style={styles.sectionDescription}>
+              Personal in-app purchases are no longer available. Schools use
+              Isfaham for school-to-family Somali voice messages.
+            </Text>
+          ) : null}
           {!!error && <Text style={styles.error}>{error}</Text>}
           <Pressable
-            onPress={() =>
-              void logOutPurchases()
-                .catch(() => undefined)
-                .then(() => supabase?.auth.signOut())
-            }
+            onPress={() => {
+              void supabase?.auth.signOut();
+            }}
           >
             <Text style={styles.signOut}>
               Sign out{session.user.email ? ` • ${session.user.email}` : ""}

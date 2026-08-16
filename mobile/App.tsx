@@ -12,8 +12,8 @@ import { supabase } from "./src/lib/supabase";
 import { MessageHistory } from "./src/screens/MessageHistory";
 import { SchoolMessenger } from "./src/screens/SchoolMessenger";
 
-// Personal/two-way translate UI is preserved in App.legacy.tsx and related
-// screens (CreditsScreen, ConsumerRemote, WelcomeFlow) for later restore.
+// Legacy Personal/two-way UI lives in App.legacy.tsx (not loaded at runtime).
+// Active app has no RevenueCat / in-app purchase SDK.
 
 type AppTab = "message" | "history" | "account";
 

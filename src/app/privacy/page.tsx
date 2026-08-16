@@ -32,8 +32,8 @@ export default function PrivacyPage() {
             conversation duration, and error data.
           </li>
           <li>
-            Purchase and entitlement information supplied by Apple,
-            RevenueCat, or Stripe.
+            Purchase and billing information supplied by Stripe for school
+            plans.
           </li>
           <li>
             School and staff account information when you use school features.
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
           <li>Provide speech recognition, translation, and translated audio.</li>
           <li>Create and maintain accounts and translation balances.</li>
           <li>Enable secure remote and school conversations.</li>
-          <li>Process purchases and prevent duplicate credit grants.</li>
+          <li>Process school plan billing and prevent misuse.</li>
           <li>Maintain security, prevent misuse, and troubleshoot errors.</li>
           <li>Measure and improve service performance.</li>
           <li>Respond to support and privacy requests.</li>
@@ -78,9 +78,9 @@ export default function PrivacyPage() {
         <p>
           We use providers that process information on our behalf, including
           Microsoft Azure for speech and translation, Supabase for
-          authentication and data storage, Vercel for hosting, Apple and
-          RevenueCat for iOS purchases, Stripe for eligible web purchases,
-          Twilio for certain school invitations, and Resend for email delivery.
+          authentication and data storage, Vercel for hosting, Stripe for
+          school plans, Twilio for parent SMS delivery, and Resend for email
+          delivery.
           Their handling of information is also governed by their own terms and
           privacy policies.
         </p>

@@ -38,7 +38,6 @@ import {
   TranslationResult,
   translateRecording,
 } from "./src/lib/api";
-import { logOutPurchases } from "./src/lib/iap";
 import { supabase } from "./src/lib/supabase";
 import { CreditsScreen } from "./src/screens/CreditsScreen";
 import { ConsumerRemote } from "./src/screens/ConsumerRemote";
@@ -682,14 +681,12 @@ function AppContent() {
               throw new Error("Sign in before deleting an account.");
             }
             await deleteAccount(session.access_token);
-            await logOutPurchases().catch(() => undefined);
             await supabase?.auth.signOut({ scope: "local" });
             selectTab("translate");
           }}
           onSignOut={() => {
-            void logOutPurchases()
-              .catch(() => undefined)
-              .then(() => supabase?.auth.signOut({ scope: "local" }))
+            void supabase
+              ?.auth.signOut({ scope: "local" })
               .finally(() => selectTab("translate"));
           }}
           session={session}

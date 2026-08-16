@@ -59,12 +59,10 @@ export default function TermsPage() {
       <section>
         <h2>5. Purchases and school plans</h2>
         <p>
-          Personal translation credits are consumable purchases rather than
-          recurring subscriptions. Purchases made in the iOS app are processed
-          by Apple and may be supported by RevenueCat. Eligible website
-          purchases and school plans may be processed by Stripe. Prices, taxes,
-          refunds, and payment disputes are governed by the applicable
-          storefront or payment provider and applicable law.
+          School plans may be purchased on the website and are processed by
+          Stripe. Prices, taxes, refunds, and payment disputes are governed by
+          Stripe and applicable law. The mobile app does not sell in-app
+          purchases.
         </p>
         <p>
           If a school purchases a recurring plan, its renewal and cancellation
