@@ -2,7 +2,7 @@
   "expo": {
     "name": "Isfaham",
     "slug": "isfaham",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "icon": "./assets/isfaham-icon-ios.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
