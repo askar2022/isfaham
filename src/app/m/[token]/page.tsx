@@ -1,10 +1,20 @@
+import type { Metadata } from "next";
+
 import { ParentListenPlayer } from "@/components/ParentListenPlayer";
 
-export const metadata = {
-  title: "Somali voice message",
+export const metadata: Metadata = {
+  title: "Somali voice message from school",
+  description:
+    "Open this page to listen to the Somali voice message and read the text from your child's school.",
   robots: {
     index: false,
     follow: false,
+  },
+  openGraph: {
+    title: "Somali voice message from school",
+    description:
+      "Listen to the Somali audio and read the message text from your child's school.",
+    type: "website",
   },
 };
 

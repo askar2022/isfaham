@@ -42,6 +42,7 @@ export async function sendParentMessage(input: {
   toE164: string;
   body: string;
   listenUrl?: string;
+  mediaUrl?: string;
 }) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
   const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
@@ -72,6 +73,7 @@ export async function sendParentMessage(input: {
       body?: string;
       contentSid?: string;
       contentVariables?: string;
+      mediaUrl?: string[];
     } = { to };
 
     if (messagingServiceSid) {
@@ -87,6 +89,9 @@ export async function sendParentMessage(input: {
       });
     } else {
       createParams.body = input.body;
+      if (input.channel === "whatsapp" && input.mediaUrl) {
+        createParams.mediaUrl = [input.mediaUrl];
+      }
     }
 
     const message = await client.messages.create(createParams);

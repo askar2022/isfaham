@@ -346,7 +346,7 @@ export function SchoolMessenger() {
         Alert.alert(
           "Sent",
           deliveryChannel === "whatsapp"
-            ? "The parent WhatsApp message was sent with a secure listen link."
+            ? "WhatsApp was sent with the Somali voice and text."
             : "The parent SMS was sent with a secure listen link.",
         );
       }
