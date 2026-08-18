@@ -90,7 +90,10 @@ export function MessageHistory() {
               </Text>
               <Text style={styles.meta}>
                 Status: {message.status}
-                {message.delivery_status ? ` · SMS ${message.delivery_status}` : ""}
+                {message.delivery_channel
+                  ? ` · ${message.delivery_channel === "whatsapp" ? "WhatsApp" : "SMS"}`
+                  : ""}
+                {message.delivery_status ? ` · ${message.delivery_status}` : ""}
               </Text>
               <Text style={styles.meta}>
                 Opened: {message.link_opened_at ? "Yes" : "No"} · Played:{" "}

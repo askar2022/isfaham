@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const { data, error } = await sender.admin
       .from("voice_messages")
       .select(
-        "id, parent_phone_last_four, status, delivery_status, english_text, somali_text, link_opened_at, audio_played_at, sent_at, expires_at, created_at, sender_email",
+        "id, parent_phone_last_four, status, delivery_status, delivery_channel, english_text, somali_text, link_opened_at, audio_played_at, sent_at, expires_at, created_at, sender_email",
       )
       .eq("school_id", sender.profile.school_id)
       .neq("status", "deleted")

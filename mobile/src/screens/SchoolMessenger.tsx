@@ -30,6 +30,7 @@ import { requestStaffCode } from "../lib/remote";
 import { supabase } from "../lib/supabase";
 import {
   createVoiceMessage,
+  DeliveryChannel,
   sendVoiceMessage,
   transcribeVoiceMessage,
   translateVoiceMessage,
@@ -66,6 +67,8 @@ export function SchoolMessenger() {
   const [somaliText, setSomaliText] = useState("");
   const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
   const [listenUrl, setListenUrl] = useState("");
+  const [deliveryChannel, setDeliveryChannel] =
+    useState<DeliveryChannel>("sms");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const countdownActive = useRef(false);
@@ -330,13 +333,22 @@ export function SchoolMessenger() {
     try {
       setBusy(true);
       setError("");
-      const result = await sendVoiceMessage(message.id, session.access_token);
+      const result = await sendVoiceMessage(
+        message.id,
+        session.access_token,
+        deliveryChannel,
+      );
       setListenUrl(result.listenUrl);
       setMessage(result.message);
       if (result.warning) {
         Alert.alert("Message ready", result.warning);
       } else {
-        Alert.alert("Sent", "The parent SMS was sent with a secure listen link.");
+        Alert.alert(
+          "Sent",
+          deliveryChannel === "whatsapp"
+            ? "The parent WhatsApp message was sent with a secure listen link."
+            : "The parent SMS was sent with a secure listen link.",
+        );
       }
       setStep("record");
       setMessage(null);
@@ -538,6 +550,61 @@ export function SchoolMessenger() {
                       Listen in Somali
                     </Text>
                   </Pressable>
+
+                  <Text style={styles.previewLabel}>Send by</Text>
+                  <View style={styles.channelRow}>
+                    <Pressable
+                      onPress={() => setDeliveryChannel("sms")}
+                      style={[
+                        styles.channelChip,
+                        deliveryChannel === "sms" && styles.channelChipActive,
+                      ]}
+                    >
+                      <Ionicons
+                        color={deliveryChannel === "sms" ? "#fff" : "#5B38D2"}
+                        name="chatbubble-ellipses-outline"
+                        size={16}
+                      />
+                      <Text
+                        style={[
+                          styles.channelChipText,
+                          deliveryChannel === "sms" &&
+                            styles.channelChipTextActive,
+                        ]}
+                      >
+                        SMS
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setDeliveryChannel("whatsapp")}
+                      style={[
+                        styles.channelChip,
+                        deliveryChannel === "whatsapp" &&
+                          styles.channelChipActive,
+                      ]}
+                    >
+                      <Ionicons
+                        color={
+                          deliveryChannel === "whatsapp" ? "#fff" : "#5B38D2"
+                        }
+                        name="logo-whatsapp"
+                        size={16}
+                      />
+                      <Text
+                        style={[
+                          styles.channelChipText,
+                          deliveryChannel === "whatsapp" &&
+                            styles.channelChipTextActive,
+                        ]}
+                      >
+                        WhatsApp
+                      </Text>
+                    </Pressable>
+                  </View>
+                  <Text style={styles.channelHint}>
+                    Use WhatsApp if the parent uses it. Otherwise send SMS.
+                  </Text>
+
                   <Pressable
                     disabled={busy}
                     onPress={() => void sendToParent()}
@@ -546,7 +613,11 @@ export function SchoolMessenger() {
                     {busy ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
-                      <Text style={styles.primaryButtonText}>Send to parent</Text>
+                      <Text style={styles.primaryButtonText}>
+                        {deliveryChannel === "whatsapp"
+                          ? "Send on WhatsApp"
+                          : "Send SMS"}
+                      </Text>
                     )}
                   </Pressable>
                   <Pressable onPress={resetRecording} style={styles.secondaryButton}>
@@ -870,6 +941,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 12,
+  },
+  channelRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 8,
+  },
+  channelChip: {
+    alignItems: "center",
+    backgroundColor: "#F3EFFA",
+    borderColor: "#D9D1E8",
+    borderRadius: 12,
+    borderWidth: 1,
+    flex: 1,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    paddingVertical: 12,
+  },
+  channelChipActive: {
+    backgroundColor: "#5B38D2",
+    borderColor: "#5B38D2",
+  },
+  channelChipText: {
+    color: "#5B38D2",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  channelChipTextActive: { color: "#fff" },
+  channelHint: {
+    color: "#7C748A",
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 4,
   },
   primaryButton: {
     alignItems: "center",

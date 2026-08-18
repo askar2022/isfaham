@@ -3,6 +3,8 @@ import { File } from "expo-file-system";
 
 import { requireApiUrl } from "./config";
 
+export type DeliveryChannel = "sms" | "whatsapp";
+
 export type VoiceMessageDraft = {
   id: string;
   public_token?: string;
@@ -18,6 +20,7 @@ export type VoiceMessageHistoryItem = {
   parent_phone_last_four: string;
   status: string;
   delivery_status: string | null;
+  delivery_channel?: string | null;
   english_text: string | null;
   somali_text: string | null;
   link_opened_at: string | null;
@@ -113,17 +116,23 @@ export async function translateVoiceMessage(
 export async function sendVoiceMessage(
   messageId: string,
   accessToken: string,
+  channel: DeliveryChannel = "sms",
 ) {
   const response = await fetch(
     `${requireApiUrl()}/api/voice-messages/${messageId}/send`,
     {
       method: "POST",
-      headers: authHeaders(accessToken),
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeaders(accessToken),
+      },
+      body: JSON.stringify({ channel }),
     },
   );
   return responseBody<{
     message: VoiceMessageDraft;
     listenUrl: string;
+    channel: DeliveryChannel;
     smsSent: boolean;
     warning?: string;
   }>(response);

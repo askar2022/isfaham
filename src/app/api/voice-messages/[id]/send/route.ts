@@ -2,8 +2,15 @@ import { NextResponse } from "next/server";
 
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { getRequestUser } from "@/lib/supabase/request-user";
-import { sendParentSms } from "@/lib/twilio-sms";
+import {
+  DeliveryChannel,
+  sendParentMessage,
+} from "@/lib/twilio-sms";
 import { requireSchoolSender } from "@/lib/voice-messages";
+
+function parseChannel(value: unknown): DeliveryChannel {
+  return value === "whatsapp" ? "whatsapp" : "sms";
+}
 
 export async function POST(
   request: Request,
@@ -31,6 +38,14 @@ export async function POST(
     const sender = await requireSchoolSender(user.id, user.email);
     if (!sender.ok) {
       return NextResponse.json({ error: sender.reason }, { status: 403 });
+    }
+
+    let channel: DeliveryChannel = "sms";
+    try {
+      const body = (await request.json()) as { channel?: unknown };
+      channel = parseChannel(body.channel);
+    } catch {
+      channel = "sms";
     }
 
     const { id } = await context.params;
@@ -67,24 +82,36 @@ export async function POST(
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
       new URL(request.url).origin;
     const listenUrl = `${siteUrl}/m/${existing.public_token}`;
-    const smsBody = `Isfaham: You received a Somali voice message from your child's school. Listen here: ${listenUrl}`;
+    const messageBody =
+      channel === "whatsapp"
+        ? `Isfaham: Waxaad heshay fariin cod ah oo Soomaali ah oo ka timid dugsiga ilmahaaga. Dhageyso halkan: ${listenUrl}`
+        : `Isfaham: You received a Somali voice message from your child's school. Listen here: ${listenUrl}`;
 
-    const sms = await sendParentSms({
+    const delivery = await sendParentMessage({
+      channel,
       toE164: existing.parent_phone_e164,
-      body: smsBody,
+      body: messageBody,
+      listenUrl,
     });
 
     const { data, error } = await sender.admin
       .from("voice_messages")
       .update({
-        status: sms.ok ? "sent" : "failed",
-        delivery_status: sms.ok ? "sent" : sms.warning ? "manual" : "failed",
-        sms_sid: sms.sid,
+        status: delivery.ok ? "sent" : "failed",
+        delivery_status: delivery.ok
+          ? "sent"
+          : delivery.warning
+            ? "manual"
+            : "failed",
+        delivery_channel: channel,
+        sms_sid: delivery.sid,
         sent_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("id, status, delivery_status, public_token, sent_at")
+      .select(
+        "id, status, delivery_status, delivery_channel, public_token, sent_at",
+      )
       .single();
 
     if (error || !data) {
@@ -94,8 +121,9 @@ export async function POST(
     return NextResponse.json({
       message: data,
       listenUrl,
-      smsSent: sms.ok,
-      warning: sms.warning,
+      channel,
+      smsSent: delivery.ok,
+      warning: delivery.warning,
     });
   } catch (error) {
     console.error("Voice message send failed:", error);
