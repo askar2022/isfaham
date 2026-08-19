@@ -37,11 +37,34 @@ function resolveFromNumber(channel: DeliveryChannel) {
   return fromNumber.replace(/^whatsapp:/, "");
 }
 
+function twilioWarning(channelLabel: string, error: unknown) {
+  const twilioError = error as {
+    code?: number | string;
+    message?: string;
+    moreInfo?: string;
+  };
+  const code = twilioError.code != null ? String(twilioError.code) : "";
+  const detail = twilioError.message?.trim();
+
+  // Outside the 24-hour customer-care window: freeform WhatsApp is blocked.
+  if (code === "63016") {
+    return "WhatsApp needs an approved message template for first contact, or the parent must message your Twilio WhatsApp number first. SMS still works.";
+  }
+  if (code === "63007" || code === "63049") {
+    return "WhatsApp sender is offline or not linked in Twilio. Open Twilio Senders and make sure whatsapp:+16128873235 is Online.";
+  }
+  if (detail) {
+    return `${channelLabel} could not be sent (${code || "error"}): ${detail}`;
+  }
+  return `${channelLabel} could not be sent. Share the listening link manually, then check Twilio.`;
+}
+
 export async function sendParentMessage(input: {
   channel: DeliveryChannel;
   toE164: string;
   body: string;
   listenUrl?: string;
+  /** Optional; WhatsApp freeform media often fails outside the 24h window. */
   mediaUrl?: string;
 }) {
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
@@ -89,6 +112,7 @@ export async function sendParentMessage(input: {
       });
     } else {
       createParams.body = input.body;
+      // Only attach media when explicitly requested and no template is configured.
       if (input.channel === "whatsapp" && input.mediaUrl) {
         createParams.mediaUrl = [input.mediaUrl];
       }
@@ -105,7 +129,7 @@ export async function sendParentMessage(input: {
     console.error(`Twilio ${channelLabel} send failed:`, error);
     return {
       ok: false as const,
-      warning: `${channelLabel} could not be sent. Share the listening link manually, then check Twilio.`,
+      warning: twilioWarning(channelLabel, error),
       sid: null as string | null,
     };
   }

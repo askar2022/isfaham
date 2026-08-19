@@ -82,30 +82,20 @@ export async function POST(
       process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
       new URL(request.url).origin;
     const listenUrl = `${siteUrl}/m/${existing.public_token}`;
-    const audioUrl = `${siteUrl}/api/m/${existing.public_token}/audio`;
     const somaliText = existing.somali_text.trim();
+    // WhatsApp: keep first outreach as clear text + link. Freeform media is
+    // unreliable outside Meta's 24-hour window without an approved template.
     const messageBody =
       channel === "whatsapp"
-        ? `Isfaham — fariin ka timid dugsiga ilmahaaga:\n\n${somaliText}\n\nRiix si aad u dhageysato codka. Haddii aadan arkin codka, fur: ${listenUrl}`
+        ? `Isfaham — fariin ka timid dugsiga ilmahaaga.\n\n${somaliText}\n\nDhageyso codka halkan:\n${listenUrl}`
         : `Isfaham: You received a Somali voice message from your child's school. Listen here: ${listenUrl}`;
 
-    let delivery = await sendParentMessage({
+    const delivery = await sendParentMessage({
       channel,
       toE164: existing.parent_phone_e164,
       body: messageBody,
       listenUrl,
-      mediaUrl: channel === "whatsapp" ? audioUrl : undefined,
     });
-
-    // If WhatsApp rejects media, still deliver Somali text + listen link.
-    if (!delivery.ok && channel === "whatsapp") {
-      delivery = await sendParentMessage({
-        channel,
-        toE164: existing.parent_phone_e164,
-        body: messageBody,
-        listenUrl,
-      });
-    }
 
     const { data, error } = await sender.admin
       .from("voice_messages")
