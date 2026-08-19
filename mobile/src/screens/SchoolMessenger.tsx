@@ -465,9 +465,6 @@ export function SchoolMessenger() {
 
               {step === "record" || !message ? (
                 <View style={styles.micStage}>
-                  {countdown !== null ? (
-                    <Text style={styles.countdownHint}>Get ready…</Text>
-                  ) : null}
                   <Pressable
                     disabled={busy || checkingStaff || countdown !== null}
                     onPress={onMainButtonPress}
@@ -488,7 +485,7 @@ export function SchoolMessenger() {
                     )}
                   </Pressable>
                   {countdown !== null ? (
-                    <Text style={styles.micLabel}>Starting in {countdown}…</Text>
+                    <Text style={styles.micLabel}>Get ready</Text>
                   ) : recording ? (
                     <>
                       <Text style={styles.recordingTimer}>
@@ -799,14 +796,11 @@ const styles = StyleSheet.create({
   },
   countdownNumber: {
     color: "#fff",
-    fontSize: 72,
+    fontSize: 88,
     fontWeight: "800",
-  },
-  countdownHint: {
-    color: "#5B38D2",
-    fontSize: 14,
-    fontWeight: "800",
-    marginBottom: 12,
+    includeFontPadding: false,
+    lineHeight: 96,
+    textAlign: "center",
   },
   stopSquare: {
     backgroundColor: "#fff",
